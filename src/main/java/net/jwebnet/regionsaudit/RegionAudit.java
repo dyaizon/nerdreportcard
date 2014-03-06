@@ -19,6 +19,7 @@ package net.jwebnet.regionsaudit;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Set;
 import org.bukkit.Bukkit;
@@ -32,7 +33,7 @@ import org.bukkit.plugin.java.JavaPlugin;
  *
  * @author joseph
  */
-public final class RegionsAudit extends JavaPlugin {
+public final class RegionAudit extends JavaPlugin {
 
     @Override
     public void onEnable() {
@@ -78,16 +79,29 @@ public final class RegionsAudit extends JavaPlugin {
                 }
                 Player player = (Player) sender;
                 RegionManager regionManager = getWorldGuard().getRegionManager(player.getWorld());
-                ProtectedRegion region = regionManager.getRegion(args[0]);
-                Set<String> regionOwnersSet = region.getOwners().getPlayers();
-                String[] regionOwners = regionOwnersSet.toArray(new String[0]);
-                sender.sendMessage(region.getId() + " - " + region.getOwners().toPlayersString());
-                if (regionOwners.length > 0) {
-                    // First owner
-                    Player target = Bukkit.getServer().getPlayer(regionOwners[0]);
-                    Calendar mydate = Calendar.getInstance();
-                    mydate.setTimeInMillis(target.getLastPlayed());
-                    sender.sendMessage("Owner 1: " + mydate.get(Calendar.DAY_OF_MONTH) + "." + mydate.get(Calendar.MONTH) + "." + mydate.get(Calendar.YEAR));
+                String regionName = args[0];
+                ProtectedRegion region = regionManager.getRegion(regionName);
+                if (region == null) {
+                    // region not found
+                    sender.sendMessage("Region named " + regionName + " was not found. Please check the spelling.");
+                } else {
+                    // region was found
+                    Set<String> regionOwnersSet = region.getOwners().getPlayers();
+                    String[] regionOwners = regionOwnersSet.toArray(new String[0]);
+                    sender.sendMessage(region.getId() + " - " + region.getOwners().toPlayersString());
+                    if (regionOwners.length > 0) {
+                        for (String regionOwner : regionOwners) {
+                            // loop through owners
+                            Player target = Bukkit.getServer().getPlayer(regionOwner);
+                            Calendar mydate = Calendar.getInstance();
+                            mydate.setTimeInMillis(target.getLastPlayed());
+                            SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy");
+                            sender.sendMessage(regionOwner + " was last seen on  " + format.format(mydate.getTime()));
+                        }
+                    } else {
+                        // region has no owners
+                        sender.sendMessage("The region names " + regionName + " has no owners.");
+                    }
                 }
             }
 
