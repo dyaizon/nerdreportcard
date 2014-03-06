@@ -5,15 +5,30 @@
     <artifactId>RegionsAudit</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
+    <repositories>
+        <!-- Bukkit can be found at the following repository -->
+        <repository>
+            <id>bukkit-repo</id>
+            <url>http://repo.bukkit.org/content/groups/public/</url>
+        </repository>
+        <repository>
+            <id>sk89q-repo</id>
+            <url>http://maven.sk89q.com/repo/</url>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
             <groupId>com.sk89q</groupId>
             <artifactId>worldguard</artifactId>
-            <version>5.7.4-SNAPSHOT</version>
+            <version>5.9</version>
+            <type>jar</type>
         </dependency>
+        <!-- Dependency information --> 
         <dependency>
             <groupId>org.bukkit</groupId>
             <artifactId>bukkit</artifactId>
+            <!-- Bukkit API Version, change if necessary -->
             <version>1.7.2-R0.3</version>
         </dependency>
     </dependencies>
@@ -22,28 +37,23 @@
         <finalName>RegionsAudit</finalName>
         <defaultGoal>install</defaultGoal>
 
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <artifactId>maven-antrun-plugin</artifactId>
-                    <version>1.7</version>
-                </plugin>
-                <plugin>
-                    <artifactId>maven-assembly-plugin</artifactId>
-                    <version>2.4</version>
-                </plugin>
-                <plugin>
-                    <artifactId>maven-dependency-plugin</artifactId>
-                    <version>2.8</version>
-                </plugin>
-                <plugin>
-                    <artifactId>maven-release-plugin</artifactId>
-                    <version>2.4.2</version>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-        
         <plugins>
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.7</version>
+            </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.4</version>
+            </plugin>
+            <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>2.8</version>
+            </plugin>
+            <plugin>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>2.4.2</version>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -86,7 +96,7 @@
 
         <resources>
             <resource>
-                <directory>${project.basedir}/</directory>
+                <directory>${project.basedir}/src/main/resources/</directory>
                 <filtering>true</filtering>
             </resource>
         </resources>

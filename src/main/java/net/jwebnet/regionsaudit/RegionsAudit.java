@@ -19,9 +19,7 @@ package net.jwebnet.regionsaudit;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.Set;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -84,12 +82,13 @@ public final class RegionsAudit extends JavaPlugin {
                 Set<String> regionOwnersSet = region.getOwners().getPlayers();
                 String[] regionOwners = regionOwnersSet.toArray(new String[0]);
                 sender.sendMessage(region.getId() + " - " + region.getOwners().toPlayersString());
-                // First owner
-                Player target = Bukkit.getServer().getPlayer(regionOwners[0]);
-                Calendar mydate = Calendar.getInstance();
-                mydate.setTimeInMillis(target.getLastPlayed());
-                sender.sendMessage("Owner 1: " + mydate.get(Calendar.DAY_OF_MONTH) + "." + mydate.get(Calendar.MONTH) + "." + mydate.get(Calendar.YEAR));
-
+                if (regionOwners.length > 0) {
+                    // First owner
+                    Player target = Bukkit.getServer().getPlayer(regionOwners[0]);
+                    Calendar mydate = Calendar.getInstance();
+                    mydate.setTimeInMillis(target.getLastPlayed());
+                    sender.sendMessage("Owner 1: " + mydate.get(Calendar.DAY_OF_MONTH) + "." + mydate.get(Calendar.MONTH) + "." + mydate.get(Calendar.YEAR));
+                }
             }
 
             // do something
