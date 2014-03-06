@@ -1,10 +1,10 @@
-name: RegionsAudit
-main: net.jwebnet.regionsaudit.RegionsAudit
-version: 1.0
+name: RegionAudit
+main: net.jwebnet.regionaudit.RegionAudit
+version: 0.5
 
 commands:
    rgaudit:
       description: This is a demo command.
       usage: /rgaudit plotname
-      permission: regionsaudit.audit
+      permission: regionaudit.audit
       permission-message: You don't have permission
