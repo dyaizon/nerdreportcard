@@ -132,7 +132,6 @@ public class RegionAuditCommandExecutor implements CommandExecutor {
             }
             if (rgWorld == null) {
                 sender.sendMessage("World named " + this.rgWorldName + " was not found. Please check the spelling.");
-                return true;
             }
 
             RegionManager regionManager = getWorldGuard().getRegionManager(rgWorld);
