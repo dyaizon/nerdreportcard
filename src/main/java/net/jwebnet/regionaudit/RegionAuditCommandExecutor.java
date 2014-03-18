@@ -121,7 +121,11 @@ public class RegionAuditCommandExecutor implements CommandExecutor {
                 Set<String> regionOwnersSet = region.getOwners().getPlayers();
                 String[] regionOwners = regionOwnersSet.toArray(new String[0]);
                 sender.sendMessage(region.getId() + " - " + region.getOwners().toPlayersString());
+
                 if (regionOwnersSet.size() > 0) {
+                    /*
+                     if the regionOwnersSet size is greater then 0, loop though the set
+                     */
                     for (String regionOwner : regionOwners) {
                         // loop through owners
                         /* TODO: github issue #1
@@ -129,18 +133,34 @@ public class RegionAuditCommandExecutor implements CommandExecutor {
                          */
 
                         Calendar mydate = Calendar.getInstance();
+                        /*
+                         http://jd.bukkit.org/beta/apidocs/org/bukkit/Server.html#getOfflinePlayer(java.lang.String)
+                         This will return an object even if the player does not exist. To this method, all players will exist.
+                         */
                         OfflinePlayer ownerPlayer = getOfflinePlayer(regionOwner);
+                        /*
+                         Check if this is an actual player
+                         */
+                        if (ownerPlayer.hasPlayedBefore() == true) {
+                            try {
+                                mydate.setTimeInMillis(ownerPlayer.getLastPlayed());
+                            } finally {
 
-                        try {
-                            mydate.setTimeInMillis(ownerPlayer.getLastPlayed());
-                        } finally {
+                            }
+                            SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy");
+                            sender.sendMessage(regionOwner + " was last seen on  " + format.format(mydate.getTime()));
 
+                        } else {
+                            // This player name is not registered on the server
+                            sender.sendMessage("Owner named " + regionOwner + " not found on server. Please check spelling.");
+                            return true;
                         }
-                        SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy");
-                        sender.sendMessage(regionOwner + " was last seen on  " + format.format(mydate.getTime()));
+
                     }
                 } else {
-                    // region has no owners
+                    /*
+                     this region has no owners
+                     */
                     sender.sendMessage("The region named " + regionName + " has no owners.");
                 }
             }
