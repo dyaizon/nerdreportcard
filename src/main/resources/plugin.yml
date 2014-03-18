@@ -4,7 +4,7 @@ version: 1.0
 
 commands:
    rgaudit:
-      description: This is a demo command.
-      usage: /rgaudit plotname
+      description: Audit a worldguard region's owners.
+      usage: /rgaudit <plotname> [<worldname>]
       permission: regionaudit.audit
       permission-message: You don't have permission
