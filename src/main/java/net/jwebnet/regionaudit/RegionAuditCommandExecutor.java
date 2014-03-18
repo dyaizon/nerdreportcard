@@ -45,6 +45,7 @@ public class RegionAuditCommandExecutor implements CommandExecutor {
      http://pubs.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap12.html
      */
     private final RegionAudit pluginRegionAudit;
+    private String rgWorldName;
 
     public RegionAuditCommandExecutor(RegionAudit plugin) {
         this.pluginRegionAudit = plugin;
@@ -94,32 +95,46 @@ public class RegionAuditCommandExecutor implements CommandExecutor {
                      * args[1] = worldname
                      */
 
-                    // look up the world
-                    String rgWorldName = args[1];
-                    List<World> worldList = getWorlds();
-
-                    for (World i : worldList) {
-                        if (i.getName().equals(rgWorldName)) {
-                            rgWorld = i;
-                            break;
-                        }
-                    }
+                    // set the world name
+                    this.rgWorldName = args[1];
                 }
             } else {
                 // Issued by player
-                if (args.length < 1) {
-                    sender.sendMessage("Not enough arguments!");
-                    return false;
+                if (args.length < 2 || args.length > 2) {
+                    // not correct number of arguments
+                    sender.sendMessage("usage: /rgaudit <plotname> [<worldname>]");
+                    return true;
                 }
                 /* prep for command execution
                  * args[0] = plotname
                  * args[1] = worldname
                  */
                 Player player = (Player) sender;
-                rgWorld = player.getWorld();
+                if (args.length == 2) {
+                    // set the world name from args[1]
+                    this.rgWorldName = args[1];
+                } else {
+                    // set the worldname as the current world for the sender
+                    this.rgWorldName = player.getWorld().getName();
+                }
             }
 
             // prep work done 
+            /*
+             check if we are searching in a valid world
+             */
+            List<World> worldList = getWorlds();
+            for (World i : worldList) {
+                if (i.getName().equals(this.rgWorldName)) {
+                    rgWorld = i;
+                    break;
+                }
+            }
+            if (rgWorld == null) {
+                sender.sendMessage("World named " + this.rgWorldName + " was not found. Please check the spelling.");
+                return true;
+            }
+
             RegionManager regionManager = getWorldGuard().getRegionManager(rgWorld);
             String regionName = args[0];
             ProtectedRegion region = regionManager.getRegion(regionName);
