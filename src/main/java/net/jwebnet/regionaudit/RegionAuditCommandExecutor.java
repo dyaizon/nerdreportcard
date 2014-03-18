@@ -132,6 +132,7 @@ public class RegionAuditCommandExecutor implements CommandExecutor {
             }
             if (rgWorld == null) {
                 sender.sendMessage("World named " + this.rgWorldName + " was not found. Please check the spelling.");
+                return true;
             }
 
             RegionManager regionManager = getWorldGuard().getRegionManager(rgWorld);
@@ -175,7 +176,6 @@ public class RegionAuditCommandExecutor implements CommandExecutor {
                         } else {
                             // This player name is not registered on the server
                             sender.sendMessage("Owner named " + regionOwner + " not found on server. Please check spelling.");
-                            return true;
                         }
 
                     }
