@@ -152,7 +152,7 @@ public class RegionAuditCommandExecutor implements CommandExecutor {
                      if the regionOwnersSet size is greater then 0, loop though the set
                      */
                     // List name of region
-                    sender.sendMessage("Region named " + regionName + " has the following owners.");
+                    sender.sendMessage("Region named " + regionName + "in " + rgWorldName + " has the following owners.");
                     for (String regionOwner : regionOwners) {
                         // loop through owners
                         /* TODO: github issue #1
