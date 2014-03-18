@@ -20,9 +20,7 @@ import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import static org.bukkit.Bukkit.getOfflinePlayer;
@@ -42,7 +40,11 @@ import org.bukkit.plugin.Plugin;
  */
 public class RegionAuditCommandExecutor implements CommandExecutor {
 
-    private RegionAudit pluginRegionAudit;
+    /*
+     TODO: Add command flag support from github issue #9
+     http://pubs.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap12.html
+     */
+    private final RegionAudit pluginRegionAudit;
 
     public RegionAuditCommandExecutor(RegionAudit plugin) {
         this.pluginRegionAudit = plugin;
@@ -122,7 +124,10 @@ public class RegionAuditCommandExecutor implements CommandExecutor {
                 if (regionOwnersSet.size() > 0) {
                     for (String regionOwner : regionOwners) {
                         // loop through owners
-                        //TODO: Find out why the owners display in reverse order of how they are displayed
+                        /* TODO: github issue #1
+                         Find out why the owners display in reverse order of how they are displayed
+                         */
+
                         Calendar mydate = Calendar.getInstance();
                         OfflinePlayer ownerPlayer = getOfflinePlayer(regionOwner);
 
@@ -136,7 +141,7 @@ public class RegionAuditCommandExecutor implements CommandExecutor {
                     }
                 } else {
                     // region has no owners
-                    sender.sendMessage("The region names " + regionName + " has no owners.");
+                    sender.sendMessage("The region named " + regionName + " has no owners.");
                 }
             }
 
