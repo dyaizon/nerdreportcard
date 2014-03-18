@@ -140,7 +140,7 @@ public class RegionAuditCommandExecutor implements CommandExecutor {
             ProtectedRegion region = regionManager.getRegion(regionName);
             if (region == null) {
                 // region not found
-                sender.sendMessage("Region named " + regionName + " was not found. Please check the spelling.");
+                sender.sendMessage("Region named " + regionName + " was not found in " + rgWorldName + ". Please check the spelling.");
             } else {
                 // region was found
                 Set<String> regionOwnersSet = region.getOwners().getPlayers();
@@ -159,7 +159,7 @@ public class RegionAuditCommandExecutor implements CommandExecutor {
                          Find out why the owners display in reverse order of how they are displayed
                          */
 
-                        Calendar mydate = Calendar.getInstance();
+                        Calendar calendar = Calendar.getInstance();
                         /*
                          http://jd.bukkit.org/beta/apidocs/org/bukkit/Server.html#getOfflinePlayer(java.lang.String)
                          This will return an object even if the player does not exist. To this method, all players will exist.
@@ -169,9 +169,11 @@ public class RegionAuditCommandExecutor implements CommandExecutor {
                          Check if this is an actual player
                          */
                         if (ownerPlayer.hasPlayedBefore() == true) {
-                            mydate.setTimeInMillis(ownerPlayer.getLastPlayed());
-                            SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy");
-                            sender.sendMessage(regionOwner + " was last seen on  " + format.format(mydate.getTime()));
+                            // zero it out just to ensure it's being set correctly
+                            calendar.setTimeInMillis(0);
+                            calendar.setTimeInMillis(ownerPlayer.getLastPlayed());
+                            SimpleDateFormat format = new SimpleDateFormat("dd, MMMM yyyy");
+                            sender.sendMessage(regionOwner + " was last seen on  " + format.format(calendar.getTime()));
 
                         } else {
                             // This player name is not registered on the server
