@@ -100,7 +100,7 @@ public class RegionAuditCommandExecutor implements CommandExecutor {
                 }
             } else {
                 // Issued by player
-                if (args.length < 2 || args.length > 2) {
+                if (args.length < 1 || args.length > 2) {
                     // not correct number of arguments
                     sender.sendMessage("usage: /rgaudit <plotname> [<worldname>]");
                     return true;
@@ -152,7 +152,7 @@ public class RegionAuditCommandExecutor implements CommandExecutor {
                      if the regionOwnersSet size is greater then 0, loop though the set
                      */
                     // List name of region
-                    sender.sendMessage("Region named " + regionName + " has the foloowing owners.");
+                    sender.sendMessage("Region named " + regionName + " has the following owners.");
                     for (String regionOwner : regionOwners) {
                         // loop through owners
                         /* TODO: github issue #1
