@@ -75,6 +75,13 @@ public class RegionAuditCommandExecutor implements CommandExecutor {
             // If the player typed /rgaudit then do the following...
             World rgWorld = null;
 
+            /*
+             possible command syntax
+             /rgaudit <plotname> {<worldname>}
+             /rgaudit <plotname> <worldname>
+            
+             worldname is required for console
+             */
             if (!(sender instanceof Player)) {
                 // Issued by console
                 if (args.length < 2 || args.length > 2) {
@@ -98,13 +105,16 @@ public class RegionAuditCommandExecutor implements CommandExecutor {
                         }
                     }
                 }
-                //TODO: add the ability to work with console
             } else {
                 // Issued by player
                 if (args.length < 1) {
                     sender.sendMessage("Not enough arguments!");
                     return false;
                 }
+                /* prep for command execution
+                 * args[0] = plotname
+                 * args[1] = worldname
+                 */
                 Player player = (Player) sender;
                 rgWorld = player.getWorld();
             }
@@ -126,6 +136,8 @@ public class RegionAuditCommandExecutor implements CommandExecutor {
                     /*
                      if the regionOwnersSet size is greater then 0, loop though the set
                      */
+                    // List name of region
+                    sender.sendMessage("Region named " + regionName + " has the foloowing owners.");
                     for (String regionOwner : regionOwners) {
                         // loop through owners
                         /* TODO: github issue #1
@@ -142,11 +154,7 @@ public class RegionAuditCommandExecutor implements CommandExecutor {
                          Check if this is an actual player
                          */
                         if (ownerPlayer.hasPlayedBefore() == true) {
-                            try {
-                                mydate.setTimeInMillis(ownerPlayer.getLastPlayed());
-                            } finally {
-
-                            }
+                            mydate.setTimeInMillis(ownerPlayer.getLastPlayed());
                             SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy");
                             sender.sendMessage(regionOwner + " was last seen on  " + format.format(mydate.getTime()));
 
