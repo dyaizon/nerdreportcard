@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package net.jwebnet.regionaudit;
+package net.jwebnet.nerdreportcard;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -22,14 +22,23 @@ import org.bukkit.plugin.java.JavaPlugin;
  *
  * @author joseph
  */
-public final class RegionAudit extends JavaPlugin {
+public final class NerdReportCard extends JavaPlugin {
 
+    /**
+     * onEnable is a method from JavaPlugin
+     */
     @Override
     public void onEnable() {
         // This will throw a NullPointerException if you don't have the command defined in your plugin.yml file!
-        getCommand("rgaudit").setExecutor(new RegionAuditCommandExecutor(this));
+        getCommand("rcadd").setExecutor(new NerdReportCardCommandExecutor(this));
+        getCommand("rcedit").setExecutor(new NerdReportCardCommandExecutor(this));
+        getCommand("rcremove").setExecutor(new NerdReportCardCommandExecutor(this));
+        getCommand("reportcard").setExecutor(new NerdReportCardCommandExecutor(this));
     }
 
+    /**
+     * onDisable is a method from JavaPlugin
+     */
     @Override
     public void onDisable() {
     }

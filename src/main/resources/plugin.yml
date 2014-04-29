@@ -1,10 +1,43 @@
-name: RegionAudit
-main: net.jwebnet.regionaudit.RegionAudit
+name: NerdReportCard
+main: net.jwebnet.nerdreportcard.NerdReportCard
 version: 1.0
 
 commands:
-   rgaudit:
-      description: Audit a worldguard region's owners.
-      usage: /rgaudit <plotname> [<worldname>]
-      permission: regionaudit.audit
-      permission-message: You don't have permission
+    rcadd:
+        description: Add to a player's report card.
+        usage: /rcadd <player_name> <note>
+        permission: nerdreportcard.add
+        permission-message: You don't have permissionA
+    rcedit:
+        description: Edit a report card line.
+        usage: /rcedit <report_id> <note>
+        permission: nerdreportcard.edit
+        permission-message: You don't have permissionE
+    rcremove:
+        description: Delete a report card line.
+        usage: /rcremove <report_id> <report_id>
+        permission: nerdreportcard.remove
+        permission-message: You don't have permissionR      
+    reportcard:
+        description: View a player's report card.
+        usage: /reportcard {player}
+        permission: nerdreportcard.view
+        permission-message: You don't have permission to view the report card     
+    rcwarnings:
+        description: View a player's report card with warnings.
+        permission: nerdreportcard.warnings
+        permission-message: You don't have permissionW  
+permissions:
+    nerdreportcard.players.*:
+        description: Gives access viewing warnings
+        children:
+            nerdreportcard.view: true
+            nerdreportcard.warnings: true
+    nerdreportcard.admin.*:
+        description: Gives access to all nerdreportcard commands
+        children:
+            nerdreportcard.add: true
+            nerdreportcard.edit: true
+            nerdreportcard.remove: true   
+            nerdreportcard.view: true
+            nerdreportcard.warnings: true
