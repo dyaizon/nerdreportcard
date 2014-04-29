@@ -21,8 +21,13 @@ commands:
     reportcard:
         description: View a player's report card.
         usage: /reportcard {player}
-        permission: nerdreportcard.view
+        permission: nerdreportcard.report
         permission-message: You don't have permission to view the report card     
+    id:
+        description: View a player's report card.
+        usage: /rcid {reportcard_id}
+        permission: nerdreportcard.view
+        permission-message: You don't have permissionI     
     rcwarnings:
         description: View a player's report card with warnings.
         permission: nerdreportcard.warnings
@@ -31,7 +36,7 @@ permissions:
     nerdreportcard.players.*:
         description: Gives access viewing warnings
         children:
-            nerdreportcard.view: true
+            nerdreportcard.report: true
             nerdreportcard.warnings: true
     nerdreportcard.admin.*:
         description: Gives access to all nerdreportcard commands
@@ -39,5 +44,6 @@ permissions:
             nerdreportcard.add: true
             nerdreportcard.edit: true
             nerdreportcard.remove: true   
-            nerdreportcard.view: true
+            nerdreportcard.view: true   
+            nerdreportcard.report: true
             nerdreportcard.warnings: true

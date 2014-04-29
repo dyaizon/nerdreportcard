@@ -86,6 +86,18 @@ public class NerdReportCardCommandExecutor implements CommandExecutor {
             }
 
         }
+
+                if (cmd.getName().equalsIgnoreCase("rcid")) {
+            // View a report card line
+            
+            if (sender.hasPermission("nerdreportcard.view")) {
+
+            } else {
+                return true;
+            }
+
+        }
+
         if (cmd.getName().equalsIgnoreCase("reportcard")) {
             // View a report card
             
@@ -109,7 +121,7 @@ public class NerdReportCardCommandExecutor implements CommandExecutor {
                 sender.sendMessage(reportcard_line);
                 return true;
 
-            } else if (sender.hasPermission("nerdreportcard.view")) {
+            } else if (sender.hasPermission("nerdreportcard.report")) {
                 // Sender is only allowed to see id and reason
                 reportcard_line = "#" + report_id + " " + report_reason;
                 sender.sendMessage(reportcard_line);
