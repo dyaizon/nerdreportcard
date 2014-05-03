@@ -16,13 +16,28 @@
  */
 package net.jwebnet.nerdreportcard;
 
+import static java.lang.Integer.parseInt;
+import java.text.DateFormat;
+import java.util.Collections;
+import java.util.Date;
+import java.util.LinkedHashSet;
+import java.util.Locale;
+import java.util.Set;
+import net.jwebnet.nerdreportcard.reportrecord.ReportRecord;
+import org.bukkit.Bukkit;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**
  *
  * @author joseph
  */
-public final class NerdReportCard extends JavaPlugin {
+public final class NerdReportCard
+        extends JavaPlugin
+        implements Listener {
 
     /*
      We need a plugin that allows us to make notes on players that only other 
@@ -116,13 +131,34 @@ public final class NerdReportCard extends JavaPlugin {
      */
     @Override
     public void onEnable() {
+        this.saveDefaultConfig();
+        getServer().getPluginManager().registerEvents(this, this);
         // This will throw a NullPointerException if you don't have the command defined in your plugin.yml file!
+        /* Reload rhe data fale
+         * usage: /rcreload
+         */
+        getCommand("rcreload").setExecutor(new NerdReportCardCommandExecutor(this));
+        /* Add a new report
+         * usage: /rcadd <player_name> <points> <reason>
+         */
         getCommand("rcadd").setExecutor(new NerdReportCardCommandExecutor(this));
+        /* Edit an existing report by id
+         * usage: /rcedit <report_id> <note>
+         */
         getCommand("rcedit").setExecutor(new NerdReportCardCommandExecutor(this));
+        /* Remove a report by id
+         * usage: /rcremove <report_id> <report_id>
+         */
         getCommand("rcremove").setExecutor(new NerdReportCardCommandExecutor(this));
-        getCommand("reportcard").setExecutor(new NerdReportCardCommandExecutor(this));
+        /* List a report
+         * usage: /rclist {player}
+         */
+        getCommand("rclist").setExecutor(new NerdReportCardCommandExecutor(this));
+        /* List a report by id
+         * usage: /rcid <reportcard_id>
+         */
+        getCommand("rcid").setExecutor(new NerdReportCardCommandExecutor(this));
 
-        new NerdReportCardListener(this);
     }
 
     /**
@@ -130,6 +166,130 @@ public final class NerdReportCard extends JavaPlugin {
      */
     @Override
     public void onDisable() {
+    }
+
+    public ReportRecord getReportById(Integer reportId) {
+
+        ConfigurationSection recordData = this.getConfig().getConfigurationSection("reports." + reportId.toString());
+
+        ReportRecord record = new ReportRecord();
+
+        if (recordData != null) {
+            // If there was a valid ConfigurationSection
+            record.init(recordData);
+
+        }
+        return record;
+
+    }
+
+    public Set<ReportRecord> getReportsByPlayerName(String playerName) {
+
+        ConfigurationSection recordData = this.getConfig().getConfigurationSection("reports");
+
+        Set<ReportRecord> records = new LinkedHashSet<ReportRecord>();
+
+        for (String r : recordData.getKeys(false)) {
+            ReportRecord record = getReportById(parseInt(r));
+            if (record.getPlayerName().toLowerCase().equals(playerName.toLowerCase())) {
+                records.add(record);
+            }
+        }
+
+        if (records.isEmpty()) {
+            Set<ReportRecord> empty = Collections.emptySet();
+            return empty;
+        } else {
+            return records;
+
+        }
+
+//        ReportRecord record = new ReportRecord(recordData);
+//        return record;
+    }
+
+    public void addNewReportcard(String playerName, Integer points, String reason, String reporter) {
+
+        // Get the id for this report
+        Integer thisReportId = parseInt(this.getConfig().getString("nextReportId"));
+
+        // Get the id for the next report
+        Integer nextReportId = thisReportId + 1;
+
+        // Create the new report secion
+        ConfigurationSection reportData = this.getConfig().createSection("reports." + thisReportId);
+
+        // Save the report
+        reportData.set("playerName", playerName);
+        reportData.set("warningPoints", points);
+        reportData.set("reason", reason);
+        reportData.set("reporterName", reporter);
+
+        // Set the date of the report
+        DateFormat formatter;
+        formatter = DateFormat.getDateTimeInstance(
+                DateFormat.LONG,
+                DateFormat.LONG,
+                Locale.ENGLISH);
+        Date today = new Date();
+        String dateOut = formatter.format(today);
+        reportData.set("reportDate", dateOut);
+
+        // Update the next report id
+        this.getConfig().set("nextReportId", nextReportId.toString());
+
+        this.saveConfig();
+
+    }
+
+    public void editReportcard(Integer reportId, Integer points, String reason, String reporter) {
+
+        // Create the new report secion
+        ConfigurationSection reportData = this.getConfig().getConfigurationSection("reports." + reportId.toString());
+
+        // Save the report
+        reportData.set("warningPoints", points);
+        reportData.set("reason", reason);
+        reportData.set("reporterName", reporter);
+
+        // Set the date of the report
+        DateFormat formatter;
+        formatter = DateFormat.getDateTimeInstance(
+                DateFormat.LONG,
+                DateFormat.LONG,
+                Locale.ENGLISH);
+        Date today = new Date();
+        String dateOut = formatter.format(today);
+        reportData.set("reportDate", dateOut);
+
+        this.saveConfig();
+
+    }
+
+    @EventHandler
+    public void normalJoin(PlayerJoinEvent event) {
+
+        Set<ReportRecord> reports = getReportsByPlayerName(event.getPlayer().getName());
+
+        if (reports.isEmpty()) {
+        } else {
+            Bukkit.broadcast(sendHeader(event.getPlayer().getName()), "nerdreportcard.admin");
+
+            for (ReportRecord r : reports) {
+                Bukkit.broadcast("#" + r.getReportId() + " (" + r.getPoints().toString() + ") " + r.getReason() + " by " + r.getReporter() + " @ " + r.getDate(), "nerdreportcard.admin");
+            }
+            Bukkit.broadcast(sendTrailer(event.getPlayer().getName()), "nerdreportcard.admin");
+
+        }
+
+    }
+
+    public String sendHeader(String playerName) {
+        return "~~~~ Start Report for " + playerName + " ~~~~";
+    }
+
+    public String sendTrailer(String playerName) {
+        return "~~~~ End Report for " + playerName + " ~~~~";
     }
 
 }

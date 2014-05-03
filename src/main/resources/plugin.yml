@@ -1,11 +1,16 @@
 name: NerdReportCard
 main: net.jwebnet.nerdreportcard.NerdReportCard
-version: 1.0
+version: 1.1
 
 commands:
+    rcreload:
+        description: Reload report card data
+        usage: /rcreload
+        permission: nerdreportcard.admin
+        permission-message: You don't have permissionR
     rcadd:
         description: Add to a player's report card.
-        usage: /rcadd <player_name> <note>
+        usage: /rcadd <player_name> <points> <reason>
         permission: nerdreportcard.add
         permission-message: You don't have permissionA
     rcedit:
@@ -18,32 +23,30 @@ commands:
         usage: /rcremove <report_id> <report_id>
         permission: nerdreportcard.remove
         permission-message: You don't have permissionR      
-    reportcard:
+    rclist:
         description: View a player's report card.
-        usage: /reportcard {player}
-        permission: nerdreportcard.report
+        usage: /rclist {player}
+        permission: nerdreportcard.list
         permission-message: You don't have permission to view the report card     
-    id:
+    rcid:
         description: View a player's report card.
-        usage: /rcid {reportcard_id}
-        permission: nerdreportcard.view
+        usage: /rcid <reportcard_id>
+        permission: nerdreportcard.search
         permission-message: You don't have permissionI     
-    rcwarnings:
-        description: View a player's report card with warnings.
-        permission: nerdreportcard.warnings
-        permission-message: You don't have permissionW  
 permissions:
-    nerdreportcard.players.*:
-        description: Gives access viewing warnings
-        children:
-            nerdreportcard.report: true
-            nerdreportcard.warnings: true
-    nerdreportcard.admin.*:
-        description: Gives access to all nerdreportcard commands
+    nerdreportcard.edit:                    
+        description: Gives access to add, delete and update report cards
         children:
             nerdreportcard.add: true
+            nerdreportcard.remove: true
+    nerdreportcard.list.others:
+        description: Gives access to view other players
+        children:
+            nerdreportcard.list: true
+    nerdreportcard.admin:                   
+        description: Can view, edit, and search all cards
+        children:
+            nerdreportcard.list: true
+            nerdreportcard.list.others: true
             nerdreportcard.edit: true
-            nerdreportcard.remove: true   
-            nerdreportcard.view: true   
-            nerdreportcard.report: true
-            nerdreportcard.warnings: true
+            nerdreportcard.search: true

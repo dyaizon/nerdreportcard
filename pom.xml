@@ -6,8 +6,8 @@
     <modelVersion>4.0.0</modelVersion>
     <!-- The Basics -->
     <groupId>net.jwebnet</groupId>
-    <artifactId>NerdReportCard</artifactId>
-    <version>1.0</version>
+    <artifactId>nerdreportcard</artifactId>
+    <version>1.1.1</version>
     <packaging>jar</packaging>
     <dependencies>
         <dependency>
