@@ -14,10 +14,10 @@ Key:
 
 <tr><td>nerdreportcard.admin</th><td>All commands.</td><td>This will give all of the plugin's functionality to the individual whom you add it to, including the ability to /rcreload.</td></tr>
 <tr><td>nerdreportcard.add</td><td>/rcadd <i>points</i> <b>username note</b></td><td>Allows the ability to add new notes to any player. If you don't specify a points value, it will assume 0 points.</td></tr>
-<tr><td>nerdreportcard.edit</td><td>/rcedit <b>#reportID</b> points note</td><td>Allows you to edit existing notes by specifying the note's unique reportID number. NOTE: Not specifying a points value will reset the points on that specific note to 0!</td></tr>
-<tr><td>nerdreportcard.remove</td><td>/rcremove #reportID</td><td>Allows you to remove existing notes (temporarily). See below documentation for details.</td></tr>
-<tr><td>nerdreportcard.search</td><td>/rcid #reportID</td><td>Allows you to search specifically by reportID. Useful if you wish to reference the reports of another player in someone's warning for another staff member later on.</td></tr>
-<tr><td>nerdreportcard.list</td><td>/rclist username</td><td>A command with two purposes - for staff, it allows the listing of warnings on other players. However, players without the nerdreportcard.admin permission will see a limited set of information by using the command. If a player tries to use this command without the nerdreportcard.admin node, they will simply see a list of their own warnings, even if they put someone else's username in.</td></tr>
+<tr><td>nerdreportcard.edit</td><td>/rcedit <b>#reportID</b> <i>points</i> <b>note</b></td><td>Allows you to edit existing notes by specifying the note's unique reportID number. NOTE: Not specifying a points value will reset the points on that specific note to 0!</td></tr>
+<tr><td>nerdreportcard.remove</td><td>/rcremove <b>#reportID</b></td><td>Allows you to remove existing notes (temporarily). See below documentation for details.</td></tr>
+<tr><td>nerdreportcard.search</td><td>/rcid <b>#reportID</b></td><td>Allows you to search specifically by reportID. Useful if you wish to reference the reports of another player in someone's warning for another staff member later on.</td></tr>
+<tr><td>nerdreportcard.list</td><td>/rclist <i>username</i></td><td>A command with two purposes - for staff, it allows the listing of warnings on other players. However, players without the nerdreportcard.admin permission will see a limited set of information by using the command. If a player tries to use this command without the nerdreportcard.admin node, they will simply see a list of their own warnings, even if they put someone else's username in.</td></tr>
 </table>
 
 Configuration
