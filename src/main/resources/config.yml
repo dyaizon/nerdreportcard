@@ -3,9 +3,9 @@
 nextReportId: 2
 reports:
     1:
-        playerName: Islid
-        warningPoints: 3
-        reason: "Requested a plugin ;)"
+        playerName: Drazisil
+        warningPoints: 0
+        reason: Testing...
         reporterName: Drazisil
         reportDate: 2012/05/01
         active: true
