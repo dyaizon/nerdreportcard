@@ -16,6 +16,7 @@
  */
 package net.jwebnet.nerdreportcard;
 
+import java.io.File;
 import static java.lang.Integer.parseInt;
 import java.text.DateFormat;
 import java.util.Collections;
@@ -23,6 +24,8 @@ import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Set;
+import net.jwebnet.nerdreportcard.i18n.I18n;
+import static net.jwebnet.nerdreportcard.i18n.I18n.tl;
 import net.jwebnet.nerdreportcard.reportrecord.ReportRecord;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
@@ -126,6 +129,8 @@ public final class NerdReportCard
 
      Like I said, a much more ambitious project, but if you can get it working then we'd really owe you, lol. What do you think?
      */
+    protected transient I18n i18n;
+
     /**
      * onEnable is a method from JavaPlugin
      */
@@ -159,6 +164,11 @@ public final class NerdReportCard
          */
         getCommand("rcid").setExecutor(new NerdReportCardCommandExecutor(this));
 
+        // Load the messages file
+        saveDefaultResource("messages_en.properties");
+        i18n = new I18n(this);
+        i18n.onEnable();
+        i18n.updateLocale("en");
     }
 
     /**
@@ -191,7 +201,7 @@ public final class NerdReportCard
 
         for (String r : recordData.getKeys(false)) {
             ReportRecord record = getReportById(parseInt(r));
-            if (record.getPlayerName().toLowerCase().equals(playerName.toLowerCase())) {
+            if ((record.getPlayerName().toLowerCase().equals(playerName.toLowerCase())) && record.getActive()) {
                 records.add(record);
             }
         }
@@ -204,8 +214,39 @@ public final class NerdReportCard
 
         }
 
-//        ReportRecord record = new ReportRecord(recordData);
-//        return record;
+    }
+
+    public Integer getActiveCountByPlayerName(String playerName) {
+        ConfigurationSection recordData = this.getConfig().getConfigurationSection("reports");
+
+        Integer playerReportCount = 0;
+
+        for (String r : recordData.getKeys(false)) {
+            ReportRecord record = getReportById(parseInt(r));
+            if ((record.getPlayerName().toLowerCase().equals(playerName.toLowerCase())) && record.getActive()) {
+                playerReportCount = playerReportCount + 1;
+            }
+        }
+
+        return playerReportCount;
+
+    }
+
+    public Integer getPointsByPlayerName(String playerName) {
+
+        ConfigurationSection recordData = this.getConfig().getConfigurationSection("reports");
+
+        Integer totalPoints = 0;
+
+        for (String r : recordData.getKeys(false)) {
+            ReportRecord record = getReportById(parseInt(r));
+            if ((record.getPlayerName().toLowerCase().equals(playerName.toLowerCase())) && record.getActive()) {
+                totalPoints = totalPoints + record.getPoints();
+            }
+        }
+
+        return totalPoints;
+
     }
 
     public void addNewReportcard(String playerName, Integer points, String reason, String reporter) {
@@ -234,6 +275,7 @@ public final class NerdReportCard
         Date today = new Date();
         String dateOut = formatter.format(today);
         reportData.set("reportDate", dateOut);
+        reportData.set("active", Boolean.TRUE);
 
         // Update the next report id
         this.getConfig().set("nextReportId", nextReportId.toString());
@@ -269,27 +311,26 @@ public final class NerdReportCard
     @EventHandler
     public void normalJoin(PlayerJoinEvent event) {
 
-        Set<ReportRecord> reports = getReportsByPlayerName(event.getPlayer().getName());
+        Integer totalActive = getActiveCountByPlayerName(event.getPlayer().getName());
 
-        if (reports.isEmpty()) {
-        } else {
-            Bukkit.broadcast(sendHeader(event.getPlayer().getName()), "nerdreportcard.admin");
+        if (totalActive > 0) {
+            Integer totalPoints = getPointsByPlayerName(event.getPlayer().getName());
 
-            for (ReportRecord r : reports) {
-                Bukkit.broadcast("#" + r.getReportId() + " (" + r.getPoints().toString() + ") " + r.getReason() + " by " + r.getReporter() + " @ " + r.getDate(), "nerdreportcard.admin");
+            if (totalPoints > 0) {
+                Bukkit.broadcast(tl("playerLoginBannerAdmin", event.getPlayer().getName(), totalPoints), "nerdreportcard.admin");
+
             }
-            Bukkit.broadcast(sendTrailer(event.getPlayer().getName()), "nerdreportcard.admin");
 
         }
 
     }
 
-    public String sendHeader(String playerName) {
-        return "~~~~ Start Report for " + playerName + " ~~~~";
-    }
+    public void saveDefaultResource(String fileName) {
+        File customConfigFile = new File(getDataFolder(), fileName);
 
-    public String sendTrailer(String playerName) {
-        return "~~~~ End Report for " + playerName + " ~~~~";
+        if (!customConfigFile.exists()) {
+            saveResource(fileName, false);
+        }
     }
 
 }

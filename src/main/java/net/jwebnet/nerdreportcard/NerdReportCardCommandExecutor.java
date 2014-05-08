@@ -18,11 +18,13 @@ package net.jwebnet.nerdreportcard;
 
 import static java.lang.Integer.parseInt;
 import java.util.Set;
+import static net.jwebnet.nerdreportcard.i18n.I18n.tl;
 import net.jwebnet.nerdreportcard.reportrecord.ReportRecord;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.ConfigurationSection;
 
 /**
  *
@@ -49,191 +51,322 @@ public class NerdReportCardCommandExecutor implements CommandExecutor {
 
         // Add a report card
         if (cmd.getName().equalsIgnoreCase("rcadd")) {
+            return cmdAdd(sender, cmd, label, args);
 
-            if (sender.hasPermission("nerdreportcard.edit")) {
-                if (args.length > 2) {
-
-                    // Check if valid player
-                    String playerName = args[0];
-                    if (Bukkit.getOfflinePlayer(playerName).hasPlayedBefore() == false) {
-                        sender.sendMessage("Not a valid player");
-                        return true;
-                    }
-
-                    Integer warningPoints = parseInt(args[1]);
-                    String[] reasonArr = args;
-                    String[] tmpArr = new String[reasonArr.length - 2];
-                    System.arraycopy(reasonArr, 2, tmpArr, 0, tmpArr.length);
-
-                    // Combine the reason into a single string
-                    String reason = "";
-                    for (String s : tmpArr) {
-                        reason += s + " ";
-                    }
-
-                    // remove the training space
-                    reason = reason.trim();
-
-                    this.pluginNerdReportCard.addNewReportcard(playerName, warningPoints, reason, sender.getName());
-                    sender.sendMessage("Report added.");
-
-                }
-            }
-
-            return true;
         }
 
         // Edit a report card
         if (cmd.getName().equalsIgnoreCase("rcedit")) {
-
-            if (sender.hasPermission("nerdreportcard.edit")) {
-                if (args.length > 2) {
-
-                    // Check if valid id
-                    Integer reportId;
-                    try {
-                        reportId = parseInt(args[0]);
-
-                    } catch (NumberFormatException err) {
-                        sender.sendMessage("Invalid report id given");
-                        return true;
-
-                    }
-
-                    ReportRecord record = this.pluginNerdReportCard.getReportById(reportId);
-                    if (record.isEmpty()) {
-                        // No record found by that id
-                        sender.sendMessage("No report found by that id.");
-                        return true;
-                    }
-
-                    Integer warningPoints = parseInt(args[1]);
-                    String[] reasonArr = args;
-                    String[] tmpArr = new String[reasonArr.length - 2];
-                    System.arraycopy(reasonArr, 2, tmpArr, 0, tmpArr.length);
-
-                    // Combine the reason into a single string
-                    String reason = "";
-                    for (String s : tmpArr) {
-                        reason += s + " ";
-                    }
-
-                    // remove the training space
-                    reason = reason.trim();
-
-                    this.pluginNerdReportCard.editReportcard(reportId, warningPoints, reason, sender.getName());
-                    sender.sendMessage("Report edited.");
-
-                }
-            }
-
-            return true;
+            return cmdEdit(sender, cmd, label, args);
         }
 
         // Reload config
         if (cmd.getName().equalsIgnoreCase("rcreload")) {
-            if (sender.hasPermission("nerdreportcard.admin")) {
-                this.pluginNerdReportCard.reloadConfig();
-            }
+            return cmdReload(sender, cmd, label, args);
 
         }
 
         // List a report card
         if (cmd.getName().equalsIgnoreCase("rclist")) {
-
-            String requestedPlayer;
-
-            if (args.length > 0 && sender.hasPermission("nerdreportcard.list.others")) {
-                // Sender is allowed to list other players
-
-                // Check if valid player
-                String playerName = args[0];
-                if (Bukkit.getOfflinePlayer(playerName).hasPlayedBefore() == false) {
-                    sender.sendMessage("Not a valid player");
-                    return true;
-                }
-                requestedPlayer = playerName;
-            } else {
-                // Sender can only list themselves
-                requestedPlayer = sender.getName();
-
-            }
-
-            // View a report card
-            if (sender.hasPermission("nerdreportcard.admin")) {
-                // Sender is allowed to see all data and search for others
-
-                Set<ReportRecord> reports = this.pluginNerdReportCard.getReportsByPlayerName(requestedPlayer);
-
-                if (reports.isEmpty()) {
-                    sender.sendMessage("Zero reports found");
-                    return true;
-                }
-                sender.sendMessage(reports.size() + " reports found");
-
-                for (ReportRecord r : reports) {
-                    sender.sendMessage("#" + r.getReportId() + " (" + r.getPoints().toString() + ") " + r.getReason() + " by " + r.getReporter() + " @ " + r.getDate());
-                }
-
-                return true;
-            } else if (sender.hasPermission("nerdreportcard.list")) {
-                // Sender is only allowed to see id and reason and their own
-                Set<ReportRecord> reports = this.pluginNerdReportCard.getReportsByPlayerName(requestedPlayer);
-
-                if (reports.isEmpty()) {
-                    sender.sendMessage("Zero reports found");
-                    return true;
-                }
-                sender.sendMessage(reports.size() + " reports found");
-
-                for (ReportRecord r : reports) {
-                    sender.sendMessage("#" + r.getReportId() + " " + r.getReason());
-                }
-
-                return true;
-            }
+            return cmdList(sender, cmd, label, args);
         }
 
         // List a report card by id
         if (cmd.getName().equalsIgnoreCase("rcid")) {
-            if (sender.hasPermission("nerdreportcard.admin")) {
-                if (args.length > 0) {
-                    Integer reportId = parseInt(args[0]);
-                    ReportRecord record = this.pluginNerdReportCard.getReportById(reportId);
-                    if (record.isEmpty()) {
-                        // No record found by that id
-                        sender.sendMessage("No report found by that id.");
-                        return true;
-                    }
-                    sender.sendMessage("#" + record.getReportId() + " (" + record.getPoints().toString() + ") " + record.getReason() + " by " + record.getReporter() + " @ " + record.getDate());
+            return cmdId(sender, cmd, label, args);
+        }
+
+        // Delete a report card by id
+        if (cmd.getName().equalsIgnoreCase("rcremove")) {
+            return cmdRemove(sender, cmd, label, args);
+        }
+
+        return true;
+    }
+
+    private Boolean cmdAdd(CommandSender sender, Command cmd, String label, String[] args) {
+        if (sender.hasPermission("nerdreportcard.edit")) {
+            if (args.length > 1) {
+
+                /*
+                 usage: /rcadd {points} <player_name> <reason>
+                 */
+                // Check if points were provided
+                boolean pointsProvided;
+                Integer warningPoints;
+                try {
+                    warningPoints = parseInt(args[0]);
+                    pointsProvided = true;
+                } catch (NumberFormatException exception) {
+                    warningPoints = 0;
+                    pointsProvided = false;
 
                 }
 
-            }
+                // Set player
+                String playerName;
+                if (pointsProvided) {
+                    playerName = args[1];
+                } else {
+                    playerName = args[0];
+                }
 
+                // Check if valid player
+                if (Bukkit.getOfflinePlayer(playerName).hasPlayedBefore() == false) {
+                    sender.sendMessage(tl("errPlayerNotSeenOnServer"));
+                    return true;
+                }
+
+                // Get reason
+                String[] reasonArr = args;
+                int newLen;
+                if (pointsProvided) {
+                    newLen = 2;
+                } else {
+                    newLen = 1;
+                }
+                String[] tmpArr = new String[reasonArr.length - newLen];
+                System.arraycopy(reasonArr, newLen, tmpArr, 0, tmpArr.length);
+
+                // Combine the reason into a single string
+                String reason = "";
+                for (String s : tmpArr) {
+                    reason += s + " ";
+                }
+
+                // remove the trailing space
+                reason = reason.trim();
+
+                this.pluginNerdReportCard.addNewReportcard(playerName, warningPoints, reason, sender.getName());
+                sender.sendMessage(tl("reportAddSuccess"));
+
+            }
         }
 
-        // List a report card by id
-        if (cmd.getName().equalsIgnoreCase("rcremove")) {
-            if (sender.hasPermission("nerdreportcard.admin")) {
-                if (args.length > 1) {
-                    if (!args[0].equals(args[1]) || args.length == 1) {
-                        // Ids do not match or second id not entered
-                        sender.sendMessage("Please enter the id twice to comfirm deletion.");
-                        return true;
-                    }
-                    String reportId = args[0];
-                    this.pluginNerdReportCard.getConfig().set("reports." + reportId, null);
-                    this.pluginNerdReportCard.saveConfig();
-                    sender.sendMessage("Report #" + reportId + " was deleted. (If it existed)");
+        return true;
+
+    }
+
+    private Boolean cmdEdit(CommandSender sender, Command cmd, String label, String[] args) {
+        if (sender.hasPermission("nerdreportcard.edit")) {
+            if (args.length > 2) {
+
+                /*
+                 usage: /rcedit <#report_id> {points} <note>
+                 */
+                // Check if valid id
+                Integer reportId;
+                // Check if valid id
+                if (!args[0].startsWith("#")) {
+                    sender.sendMessage(tl("errReportIdInvalidPrefix"));
+                    return true;
+                }
+                try {
+                    reportId = parseInt(args[0]);
+
+                } catch (NumberFormatException err) {
+                    sender.sendMessage(tl("errReportIdNotANumber"));
                     return true;
 
                 }
 
+                ReportRecord record = this.pluginNerdReportCard.getReportById(reportId);
+                if (record.isEmpty()) {
+                    // No record found by that id
+                    sender.sendMessage(tl("errReportIdNotFound"));
+                    return true;
+                }
+
+// Check if points were provided
+                boolean pointsProvided;
+                Integer warningPoints;
+                try {
+                    warningPoints = parseInt(args[1]);
+                    pointsProvided = true;
+
+                } catch (NumberFormatException exception) {
+                    warningPoints = 0;
+                    pointsProvided = false;
+
+                }
+
+                // Get reason
+                String[] reasonArr = args;
+                int newLen;
+                if (pointsProvided) {
+                    newLen = 2;
+                } else {
+                    newLen = 1;
+                }
+                String[] tmpArr = new String[reasonArr.length - newLen];
+                System.arraycopy(reasonArr, newLen, tmpArr, 0, tmpArr.length);
+
+                // Combine the reason into a single string
+                String reason = "";
+                for (String s : tmpArr) {
+                    reason += s + " ";
+                }
+
+                // remove the training space
+                reason = reason.trim();
+
+                this.pluginNerdReportCard.editReportcard(reportId, warningPoints, reason, sender.getName());
+                sender.sendMessage(tl("reportEditSuccess"));
+
             }
+        }
+
+        return true;
+
+    }
+
+    private Boolean cmdReload(CommandSender sender, Command cmd, String label, String[] args) {
+        if (sender.hasPermission("nerdreportcard.admin")) {
+            this.pluginNerdReportCard.reloadConfig();
+            this.pluginNerdReportCard.i18n.updateLocale("en");
+            sender.sendMessage(tl("reloadSuccess"));
+        }
+        return true;
+
+    }
+
+    private Boolean cmdList(CommandSender sender, Command cmd, String label, String[] args) {
+
+        String requestedPlayer;
+
+        if (args.length > 0 && sender.hasPermission("nerdreportcard.list.others")) {
+                // Sender is allowed to list other players
+
+            // Check if valid player
+            String playerName = args[0];
+            if (Bukkit.getOfflinePlayer(playerName).hasPlayedBefore() == false) {
+                sender.sendMessage(tl("errPlayerNotSeenOnServer"));
+            }
+            requestedPlayer = playerName;
+        } else {
+            // Sender can only list themselves
+            requestedPlayer = sender.getName();
 
         }
 
+        // View a report card
+        if (sender.hasPermission("nerdreportcard.admin")) {
+            // Sender is allowed to see all data and search for others
+
+            Set<ReportRecord> reports = this.pluginNerdReportCard.getReportsByPlayerName(requestedPlayer);
+
+            if (reports.isEmpty()) {
+                sender.sendMessage(tl("errNoReportsFound"));
+                return true;
+            }
+            sender.sendMessage(tl("reportsFound", reports.size()));
+
+            sender.sendMessage(tl("reportFullTop", requestedPlayer));
+            for (ReportRecord r : reports) {
+                if (r.getActive()) {
+                    sender.sendMessage(tl("reportLineFull", r.getReportId(), r.getPoints().toString(), r.getReason(), r.getReporter(), r.getDate()));
+
+                }
+            }
+            sender.sendMessage(tl("reportFullBottom", requestedPlayer));
+
+            return true;
+        } else if (sender.hasPermission("nerdreportcard.list")) {
+            // Sender is only allowed to see id and reason and their own
+            Set<ReportRecord> reports = this.pluginNerdReportCard.getReportsByPlayerName(requestedPlayer);
+
+            if (reports.isEmpty()) {
+                sender.sendMessage(tl("errNoReportsFound"));
+                return true;
+            }
+            sender.sendMessage(tl("reportsFound", reports.size()));
+
+            for (ReportRecord r : reports) {
+                if (r.getActive()) {
+                    sender.sendMessage(tl("reportLineLite", r.getReportId(), r.getReason()));
+
+                }
+            }
+
+            return true;
+        }
+        return true;
+    }
+
+    private Boolean cmdId(CommandSender sender, Command cmd, String label, String[] args) {
+        if (sender.hasPermission("nerdreportcard.admin")) {
+
+            if (args.length > 0) {
+                // Check if valid id
+                Integer reportId;
+                if (!args[0].startsWith("#")) {
+                    sender.sendMessage(tl("errReportIdInvalidPrefix"));
+                    return true;
+                }
+                try {
+                    reportId = parseInt(args[0].substring(1));
+
+                } catch (NumberFormatException err) {
+                    sender.sendMessage(tl("errReportIdNotANumber"));
+                    return true;
+
+                }
+                ReportRecord record = this.pluginNerdReportCard.getReportById(reportId);
+                if (record.isEmpty()) {
+                    // No record found by that id
+                    sender.sendMessage(tl("errReportIdNotFound"));
+                    return true;
+                }
+                sender.sendMessage(tl("reportIdTop", sender.getName()));
+                sender.sendMessage(tl("reportLineFull", record.getReportId(), record.getPoints().toString(), record.getReason(), record.getReporter(), record.getDate()));
+
+            }
+
+        }
+        return true;
+
+    }
+
+    private Boolean cmdRemove(CommandSender sender, Command cmd, String label, String[] args) {
+        if (sender.hasPermission("nerdreportcard.admin")) {
+            if (args.length > 0) {
+
+                // Check if valid id
+                Integer reportId;
+                if (!args[0].startsWith("#")) {
+                    sender.sendMessage(tl("errReportIdInvalidPrefix"));
+                    return true;
+                }
+                try {
+                    reportId = parseInt(args[0].substring(1));
+
+                } catch (NumberFormatException err) {
+                    sender.sendMessage(tl("errReportIdNotANumber"));
+                    return true;
+
+                }
+
+                ReportRecord record = this.pluginNerdReportCard.getReportById(reportId);
+                if (record.isEmpty()) {
+                    // No record found by that id
+                    sender.sendMessage(tl("errReportIdNotFound"));
+                    return true;
+                } else {
+                    ConfigurationSection reportData = this.pluginNerdReportCard.getConfig().getConfigurationSection("reports." + reportId.toString());
+                    reportData.set("active", Boolean.FALSE);
+                    this.pluginNerdReportCard.saveConfig();
+                    sender.sendMessage(tl("reportDeleted", reportId));
+                    return true;
+
+                }
+
+            } else {
+                sender.sendMessage(tl("errreportDeleteNoId"));
+                return true;
+
+            }
+
+        }
         return true;
     }
 }

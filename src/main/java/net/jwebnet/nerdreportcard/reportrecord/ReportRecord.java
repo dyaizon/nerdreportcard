@@ -31,12 +31,18 @@ public class ReportRecord {
     private String reportReason;
     private String reporterName;
     private String reportDate;
+    private Boolean active;
     private Boolean empty;
 
     public ReportRecord() {
+        active = true;
         empty = true;
     }
 
+    /**
+     *
+     * @param recordData
+     */
     public void init(ConfigurationSection recordData) {
         reportId = parseInt(recordData.getName());
         playerName = recordData.getString("playerName");
@@ -44,13 +50,22 @@ public class ReportRecord {
         reportReason = recordData.getString("reason");
         reporterName = recordData.getString("reporterName");
         reportDate = recordData.getString("reportDate");
+        active = recordData.getBoolean("active");
         empty = false;
     }
 
+    /**
+     *
+     * @return
+     */
     public Boolean isEmpty(){
         return empty;
     }
     
+    /**
+     *
+     * @return
+     */
     public Integer getReportId() {
         return reportId;
     }
@@ -59,20 +74,52 @@ public class ReportRecord {
         return playerName;
     }
 
+    /**
+     *
+     * @return
+     */
     public Integer getPoints() {
         return warningPoints;
     }
 
+    /**
+     *
+     * @return
+     */
     public String getReason() {
         return reportReason;
     }
 
+    /**
+     *
+     * @return
+     */
     public String getReporter() {
         return reporterName;
     }
 
+    /**
+     *
+     * @return
+     */
     public String getDate() {
         return reportDate;
+    }
+    
+    /**
+     *
+     * @return
+     */
+    public Boolean getActive(){
+        return active;
+    }
+    
+    /**
+     *
+     * @param isActive
+     */
+    public void setActive(Boolean isActive){
+        active = isActive;
     }
 
 }
