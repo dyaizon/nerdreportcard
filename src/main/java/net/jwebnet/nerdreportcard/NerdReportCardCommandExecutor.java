@@ -149,7 +149,7 @@ public class NerdReportCardCommandExecutor implements CommandExecutor {
 
     private Boolean cmdEdit(CommandSender sender, Command cmd, String label, String[] args) {
         if (sender.hasPermission("nerdreportcard.edit")) {
-            if (args.length > 2) {
+            if (args.length > 1) {
 
                 /*
                  usage: /rcedit <#report_id> {points} <note>
@@ -162,7 +162,7 @@ public class NerdReportCardCommandExecutor implements CommandExecutor {
                     return true;
                 }
                 try {
-                    reportId = parseInt(args[0]);
+                    reportId = parseInt(args[0].substring(1));
 
                 } catch (NumberFormatException err) {
                     sender.sendMessage(tl("errReportIdNotANumber"));

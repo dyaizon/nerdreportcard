@@ -8,3 +8,4 @@ reports:
         reason: "Requested a plugin ;)"
         reporterName: Drazisil
         reportDate: 2012/05/01
+        active: true
