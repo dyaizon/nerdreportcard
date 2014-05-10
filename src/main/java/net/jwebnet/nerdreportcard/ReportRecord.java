@@ -27,16 +27,20 @@ import java.util.Date;
  */
 public class ReportRecord {
     public Integer reportId;
+    public String reason;
+    private Integer warningPoints;
     public final String playerName;
     public final String reporterName;
-    public final String reason;
     public final boolean active;
     private final Date reportTime;
-    private final Integer warningPoints;
     
     private final ReportType reportType;
     private final static Integer invalidReportId = 0;
     private final static String dateFormatStr = "yy-MM-dd HH:mm";
+
+    ReportRecord(String playerName, String name, String reason, int warningPoints) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
     
     private enum ReportType {
         LEGACY,
@@ -76,6 +80,17 @@ public class ReportRecord {
         }
         this.warningPoints = warningPoints;
         this.active = active;
+    }
+    
+    /**
+     * Set the warning points for the report.
+     * 
+     * @param points
+     * The points to set for the report.
+     */
+    public void setPoints(Integer points)
+    {
+        warningPoints = points;
     }
 
     /**

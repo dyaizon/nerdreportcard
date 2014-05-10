@@ -17,15 +17,12 @@
 package net.jwebnet.nerdreportcard;
 
 import java.io.File;
-import static java.lang.Integer.parseInt;
-import java.text.DateFormat;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import net.jwebnet.nerdreportcard.i18n.I18n;
 import static net.jwebnet.nerdreportcard.i18n.I18n.tl;
+import net.jwebnet.nerdreportcard.utils.Database;
+import net.jwebnet.nerdreportcard.utils.YAMLDatabase;
 import org.bukkit.Bukkit;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -38,7 +35,7 @@ import org.bukkit.plugin.java.JavaPlugin;
  */
 public final class NerdReportCard extends JavaPlugin implements Listener {
     protected transient I18n i18n;
-    private ReportManager manager;
+    private Database database;
 
     /**
      * onEnable is a method from JavaPlugin
@@ -46,7 +43,11 @@ public final class NerdReportCard extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         this.saveDefaultConfig();
-        manager = new ReportManager(this);
+        // Load config
+        
+        // Create a database manager.
+        database = new YAMLDatabase(this);
+        
         getServer().getPluginManager().registerEvents(this, this);
         // This will throw a NullPointerException if you don't have the command defined in your plugin.yml file!
         /* Reload rhe data fale
@@ -88,13 +89,13 @@ public final class NerdReportCard extends JavaPlugin implements Listener {
     public void onDisable() {
     }
     
-    public ReportManager getManager() {
-        return manager;
+    public Database getReportDatabase() {
+        return database;
     }
 
     @EventHandler
     public void normalJoin(PlayerJoinEvent event) {
-        List<ReportRecord> recordList = manager.getReports(event.getPlayer().getName());
+        List<ReportRecord> recordList = database.getReports(event.getPlayer().getName());
         int totalPoints = 0;
         
         for (ReportRecord record : recordList) {

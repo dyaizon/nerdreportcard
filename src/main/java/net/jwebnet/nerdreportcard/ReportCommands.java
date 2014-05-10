@@ -20,11 +20,10 @@ import static java.lang.Integer.parseInt;
 import java.io.IOException;
 import java.util.List;
 import static net.jwebnet.nerdreportcard.i18n.I18n.tl;
-import org.bukkit.Bukkit;
+import net.jwebnet.nerdreportcard.utils.Database;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.ConfigurationSection;
 
 /**
  *
@@ -33,11 +32,11 @@ import org.bukkit.configuration.ConfigurationSection;
 public class ReportCommands implements CommandExecutor {
 
     private final NerdReportCard plugin;
-    private final ReportManager manager;
+    private final Database database;
 
     public ReportCommands(NerdReportCard plugin) {
         this.plugin = plugin;
-        manager = plugin.getManager();
+        database = plugin.getReportDatabase();
     }
 
     /**
@@ -114,54 +113,76 @@ public class ReportCommands implements CommandExecutor {
         
         return success;
     }
+    
+    private Integer argsToReportId(String[] args, CommandSender sender)
+    {
+        Integer reportId = 0;
 
-    private Boolean cmdAdd(CommandSender sender, Command cmd, String label, String[] args) {
-        boolean success = true;
-        int i = 0;
-        int warningPoints = 0;
+        // Check if valid id
+        if (!args[0].startsWith("#")) {
+            sender.sendMessage(tl("errReportIdInvalidPrefix"));
+        }
+        
+        try {
+            reportId = parseInt(args[0].substring(1));
+        } catch (NumberFormatException err) {
+            sender.sendMessage(tl("errReportIdNotANumber"));
+        }
+            
+        return reportId;
+    }
+    
+    private ReportRecord argsToReport(String[] args, int offset,
+            String reporterName)
+    {
+        ReportRecord report;
+        int i = offset;
         String playerName;
+        int warningPoints = 0;
         StringBuilder sb = new StringBuilder();
         String reason;
         
+        try {
+            warningPoints = parseInt(args[i]);
+        } catch (NumberFormatException exception) {
+            i--;
+        }
+        i++;
+
+        playerName = args[i];
+        i++;
+
+        // Check if valid player
+        //if (Bukkit.getOfflinePlayer(playerName).hasPlayedBefore() == false) {
+        //    sender.sendMessage(tl("errPlayerNotSeenOnServer"));
+        //    return true;
+        //}
+
+        // Get reason
+        for (; i < args.length; i++) {
+            sb.append(args[i]);
+            sb.append(" ");
+        }
+        reason = sb.toString();
+        reason = reason.trim();
+
+        report = new ReportRecord(playerName, reporterName, warningPoints,
+                reason);
+        
+        return report;
+    }
+
+    private Boolean cmdAdd(CommandSender sender, Command cmd, String label, String[] args)
+    {
+        boolean success = true;   
+        ReportRecord report;
+        
         success = checkPermArgs(sender, "nerdreportcard.edit", 2, args.length);
         
-        /*
-         * Iterate through the arguments.
-         */
-        if (success) {
-            /*
-            Attempt to parse to integer:
-            - success --> warning points
-            - error   --> username (no warning points specified)
-             */
-            
+        if (success) {         
+            report = argsToReport(args, 0, sender.getName());
             try {
-                warningPoints = parseInt(args[0]);
-            } catch (NumberFormatException exception) {
-                i--;
-            }
-            i++;
-            
-            playerName = args[i];
-            i++;
-
-            // Check if valid player
-            //if (Bukkit.getOfflinePlayer(playerName).hasPlayedBefore() == false) {
-            //    sender.sendMessage(tl("errPlayerNotSeenOnServer"));
-            //    return true;
-            //}
-
-            // Get reason
-            for (; i < args.length; i++) {
-                sb.append(args[i]);
-                sb.append(" ");
-            }
-            reason = sb.toString();
-            reason = reason.trim();
-
-            try {
-                manager.addReport(playerName, warningPoints, reason,
-                        sender.getName());
+                database.addReport(report);
             } catch (IOException e) {
                 success = false;
             }
@@ -170,73 +191,34 @@ public class ReportCommands implements CommandExecutor {
                 sender.sendMessage(tl("reportAddSuccess"));
             }
         }
-
+        
         return success;
     }
 
-    private Boolean cmdEdit(CommandSender sender, Command cmd, String label, String[] args) {
+    private Boolean cmdEdit(CommandSender sender, Command cmd, String label, String[] args)
+    {
         boolean success = true;
+        ReportRecord report;
+        ReportRecord parseReport;
         
         success = checkPermArgs(sender, "nerdreportcard.edit", 2, args.length);
         
         if (success) {
-            Integer reportId;
-            // Check if valid id
-            if (!args[0].startsWith("#")) {
-                sender.sendMessage(tl("errReportIdInvalidPrefix"));
-                return false;
-            }
-            try {
-                reportId = parseInt(args[0].substring(1));
+            Integer reportId = argsToReportId(args, sender);
 
-            } catch (NumberFormatException err) {
-                sender.sendMessage(tl("errReportIdNotANumber"));
-                return true;
-
-            }
-
-            ReportRecord record = manager.getReport(reportId);
-            if (record == null) {
+            report = database.getReport(reportId);
+            if (report == null) {
                 // No record found by that id
                 sender.sendMessage(tl("errReportIdNotFound"));
-                return true;
+                success = false;
             }
-
-            // Check if points were provided
-            boolean pointsProvided;
-            Integer warningPoints;
-            try {
-                warningPoints = parseInt(args[1]);
-                pointsProvided = true;
-
-            } catch (NumberFormatException exception) {
-                warningPoints = 0;
-                pointsProvided = false;
-
-            }
-
-            // Get reason
-            String[] reasonArr = args;
-            int newLen;
-            if (pointsProvided) {
-                newLen = 2;
-            } else {
-                newLen = 1;
-            }
-            String[] tmpArr = new String[reasonArr.length - newLen];
-            System.arraycopy(reasonArr, newLen, tmpArr, 0, tmpArr.length);
-
-            // Combine the reason into a single string
-            String reason = "";
-            for (String s : tmpArr) {
-                reason += s + " ";
-            }
-
-            // remove the training space
-            reason = reason.trim();
+            
+            parseReport = argsToReport(args, 1, sender.getName());
+            report.reason = parseReport.reason;
+            report.setPoints(parseReport.getPoints());
 
             try {
-                manager.editReport(record, warningPoints, reason, sender.getName());
+                database.editReport(report);
             } catch (IOException e) {
                 success = false;
             }
@@ -244,23 +226,24 @@ public class ReportCommands implements CommandExecutor {
             if (success) {
                 sender.sendMessage(tl("reportEditSuccess"));
             }
-
         }
-
+        
         return success;
     }
 
-    private Boolean cmdReload(CommandSender sender, Command cmd, String label, String[] args) {
+    private Boolean cmdReload(CommandSender sender, Command cmd, String label, String[] args)
+    {
         if (sender.hasPermission("nerdreportcard.admin")) {
             plugin.reloadConfig();
             plugin.i18n.updateLocale("en");
             sender.sendMessage(tl("reloadSuccess"));
         }
+        
         return true;
     }
 
-    private Boolean cmdList(CommandSender sender, Command cmd, String label, String[] args) {
-        boolean success = true;
+    private Boolean cmdList(CommandSender sender, Command cmd, String label, String[] args)
+    {
         String requestedPlayer;
 
         if (args.length > 0 && sender.hasPermission("nerdreportcard.list.others")) {
@@ -274,7 +257,7 @@ public class ReportCommands implements CommandExecutor {
         if (sender.hasPermission("nerdreportcard.admin")) {
             // Sender is allowed to see all data and search for others
 
-            List<ReportRecord> reports = manager.getReports(requestedPlayer);
+            List<ReportRecord> reports = database.getReports(requestedPlayer);
 
             if (reports.isEmpty()) {
                 sender.sendMessage(tl("errNoReportsFound"));
@@ -291,7 +274,7 @@ public class ReportCommands implements CommandExecutor {
             sender.sendMessage(tl("reportFullBottom", requestedPlayer));
         } else if (sender.hasPermission("nerdreportcard.list")) {
             // Sender is only allowed to see id and reason and their own
-            List<ReportRecord> reports = manager.getReports(requestedPlayer);
+            List<ReportRecord> reports = database.getReports(requestedPlayer);
 
             if (reports.isEmpty()) {
                 sender.sendMessage(tl("errNoReportsFound"));
@@ -306,69 +289,47 @@ public class ReportCommands implements CommandExecutor {
                 }
             }
         }
+
         return true;
     }
 
-    private Boolean cmdId(CommandSender sender, Command cmd, String label, String[] args) {
+    private Boolean cmdId(CommandSender sender, Command cmd, String label, String[] args)
+    {
         if (sender.hasPermission("nerdreportcard.admin")) {
             if (args.length > 0) {
                 // Check if valid id
-                Integer reportId;
-                if (!args[0].startsWith("#")) {
-                    sender.sendMessage(tl("errReportIdInvalidPrefix"));
-                    return true;
-                }
-                try {
-                    reportId = parseInt(args[0].substring(1));
-
-                } catch (NumberFormatException err) {
-                    sender.sendMessage(tl("errReportIdNotANumber"));
-                    return true;
-
-                }
-                ReportRecord record = manager.getReport(reportId);
+                Integer reportId = argsToReportId(args, sender);
+                
+                ReportRecord record = database.getReport(reportId);
                 if (record == null) {
                     // No record found by that id
                     sender.sendMessage(tl("errReportIdNotFound"));
-                    return true;
+                    return false;
                 }
                 sender.sendMessage(tl("reportIdTop", sender.getName()));
                 sender.sendMessage(tl("reportLineFull", record.reportId, record.getPoints(), record.reason, record.reporterName, record.getTimeString()));
-
             }
-
         }
         return true;
     }
 
-    private Boolean cmdRemove(CommandSender sender, Command cmd, String label, String[] args) {
+    private Boolean cmdRemove(CommandSender sender, Command cmd, String label, String[] args)
+    {
         boolean success = true;
         Integer reportId = 0;
         
         success = checkPermArgs(sender, "nerdreportcard.admin", 1, args.length);
         
         if (success) {
-            // Check if valid id
-            if (!args[0].startsWith("#")) {
-                sender.sendMessage(tl("errReportIdInvalidPrefix"));
-                success = false;
-            }
-            try {
-                reportId = parseInt(args[0].substring(1));
-            } catch (NumberFormatException err) {
-                sender.sendMessage(tl("errReportIdNotANumber"));
-                success = false;
-            }
-        }
+            reportId = argsToReportId(args, sender);
             
-        if (success) {
-            ReportRecord record = manager.getReport(reportId);
+            ReportRecord record = database.getReport(reportId);
             if (record == null) {
                 // No record found by that id
                 sender.sendMessage(tl("errReportIdNotFound"));
             } else {
                 try {
-                    manager.deleteReport(reportId);
+                    database.deleteReport(reportId);
                 } catch (IOException e) {
                     success = false;
                 }

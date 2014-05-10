@@ -17,6 +17,8 @@
 
 package net.jwebnet.nerdreportcard.utils;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import static java.lang.Integer.parseInt;
 import java.util.LinkedList;
@@ -24,6 +26,9 @@ import java.util.List;
 import net.jwebnet.nerdreportcard.NerdReportCard;
 import net.jwebnet.nerdreportcard.ReportRecord;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 
 /**
  *
@@ -31,15 +36,47 @@ import org.bukkit.configuration.ConfigurationSection;
  */
 public class YAMLDatabase implements Database {
     private final NerdReportCard plugin;
+    private final File dataFile;
+    private final FileConfiguration configFile;
+    private int nextReportId;
     
-    public YAMLDatabase (NerdReportCard plugin) {
+    public YAMLDatabase(NerdReportCard plugin) {       
+        String nextIdStr;
         this.plugin = plugin;
+        dataFile = new File(plugin.getDataFolder(), "reports.yml");
+        if (!dataFile.exists()) {
+            try {
+                dataFile.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        
+        configFile = new YamlConfiguration();
+        try {
+            configFile.load(dataFile);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InvalidConfigurationException e) {
+            e.printStackTrace();
+        }
+        
+        nextIdStr = configFile.getString("nextReportId");
+        if (nextIdStr == null) {
+            configFile.set("nextReportId", 1);
+            nextReportId = 1;
+            configFile.createSection("reports");
+        } else {
+            nextReportId = parseInt(nextIdStr);
+        }
     }
     
     public ReportRecord getReport(Integer reportId)
     {
         ReportRecord record = null;
-        ConfigurationSection recordData = plugin.getConfig().getConfigurationSection("reports." + reportId.toString());
+        ConfigurationSection recordData = configFile.getConfigurationSection("reports." + reportId.toString());
 
         if (recordData != null) {
             record = new ReportRecord(parseInt(recordData.getName()),
@@ -58,7 +95,7 @@ public class YAMLDatabase implements Database {
     {
         List<ReportRecord> reportList = new LinkedList<ReportRecord>();
         
-        ConfigurationSection recordData = plugin.getConfig().getConfigurationSection("reports");
+        ConfigurationSection recordData = configFile.getConfigurationSection("reports");
 
         for (String r : recordData.getKeys(false)) {
             ReportRecord record = getReport(parseInt(r));
@@ -73,13 +110,13 @@ public class YAMLDatabase implements Database {
     public void addReport(ReportRecord record) throws IOException
     {
         // Get the id for this report
-        Integer thisReportId = parseInt(plugin.getConfig().getString("nextReportId"));
+        Integer thisReportId = parseInt(configFile.getString("nextReportId"));
         
         // Get the id for the next report
         Integer nextReportId = thisReportId + 1;
 
         // Create the new report secion
-        ConfigurationSection reportData = plugin.getConfig().createSection("reports." + thisReportId);
+        ConfigurationSection reportData = configFile.createSection("reports." + thisReportId);
         
         // Save the report
         reportData.set("playerName", record.playerName);
@@ -90,15 +127,15 @@ public class YAMLDatabase implements Database {
         reportData.set("active", record.active);
 
         // Update the next report id
-        plugin.getConfig().set("nextReportId", nextReportId.toString());
+        configFile.set("nextReportId", nextReportId.toString());
 
-        plugin.saveConfig();
+        configFile.save(dataFile);
     }
     
     public void editReport(ReportRecord record) throws IOException
     {
         // Create the new report secion
-        ConfigurationSection reportData = plugin.getConfig().getConfigurationSection("reports." + record.reportId.toString());
+        ConfigurationSection reportData = configFile.getConfigurationSection("reports." + record.reportId.toString());
 
         // Save the report
         reportData.set("playerName", record.playerName);
@@ -108,13 +145,13 @@ public class YAMLDatabase implements Database {
         reportData.set("reportDate", record.getTimeString());
         reportData.set("active", record.active);
 
-        plugin.saveConfig();
+        configFile.save(dataFile);
     }
     
     public void deleteReport(Integer reportId) throws IOException
     {
-        ConfigurationSection reportData = plugin.getConfig().getConfigurationSection("reports." + reportId.toString());
+        ConfigurationSection reportData = configFile.getConfigurationSection("reports." + reportId.toString());
         reportData.set("active", false);
-        plugin.saveConfig();
+        configFile.save(dataFile);
     }
 }
