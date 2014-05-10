@@ -47,7 +47,8 @@ public class YAMLDatabase implements Database {
                     recordData.getString("reporterName"),
                     recordData.getString("reason"),
                     recordData.getString("reportDate"),
-                    recordData.getInt("warningPoints"));
+                    recordData.getInt("warningPoints"),
+                    recordData.getBoolean("active"));
         }
         
         return record;
@@ -69,7 +70,7 @@ public class YAMLDatabase implements Database {
         return reportList;
     }
    
-    public void setReport(ReportRecord record) throws IOException
+    public void addReport(ReportRecord record) throws IOException
     {
         // Get the id for this report
         Integer thisReportId = parseInt(plugin.getConfig().getString("nextReportId"));
@@ -113,7 +114,7 @@ public class YAMLDatabase implements Database {
     public void deleteReport(Integer reportId) throws IOException
     {
         ConfigurationSection reportData = plugin.getConfig().getConfigurationSection("reports." + reportId.toString());
-        reportData.set("active", Boolean.FALSE);
+        reportData.set("active", false);
         plugin.saveConfig();
     }
 }

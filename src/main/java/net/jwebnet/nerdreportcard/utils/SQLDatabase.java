@@ -43,7 +43,7 @@ public class SQLDatabase implements Database {
         return reportList;
     }
    
-    public void setReport(ReportRecord record) throws IOException
+    public void addReport(ReportRecord record) throws IOException
     {
         
     }

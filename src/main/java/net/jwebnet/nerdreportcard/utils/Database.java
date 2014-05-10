@@ -58,7 +58,7 @@ public interface Database {
      * @throws IOException
      * Throws an IOException if an error occurred writing to the database.
      */
-    public void setReport(ReportRecord record) throws IOException;
+    public void addReport(ReportRecord record) throws IOException;
     
     /**
      * Edit a record in the database.
@@ -78,7 +78,8 @@ public interface Database {
      * @param reportId
      * The ID of the report to remove from the database.
      * 
-     * @throws IOException 
+     * @throws IOException
+     * Throws an IOException if an error occurred writing to the database.
      */
     public void deleteReport(Integer reportId) throws IOException;
 }

@@ -27,17 +27,16 @@ import java.util.Date;
  */
 public class ReportRecord {
     public Integer reportId;
-    private Integer playerId;
     public final String playerName;
-    private Integer playerPoints;
-    private Integer reporterId;
     public final String reporterName;
-    private final ReportType reportType;
     public final String reason;
-    private Date reportTime;
+    public final boolean active;
+    private final Date reportTime;
     private final Integer warningPoints;
-    public Boolean active;
-    private final String dateFormatStr = "yy-MM-dd HH:mm";
+    
+    private final ReportType reportType;
+    private final static Integer invalidReportId = 0;
+    private final static String dateFormatStr = "yy-MM-dd HH:mm";
     
     private enum ReportType {
         LEGACY,
@@ -51,17 +50,19 @@ public class ReportRecord {
     public ReportRecord(String playerName, String reporter, Integer points,
             String reason)
     {
+        this.reportId = invalidReportId;
         this.playerName = playerName;
         this.reporterName = reporter;
         this.warningPoints = points;
         this.reason = reason;
         this.reportTime = new Date();
         reportType = ReportType.LEGACY;
+        this.active = true;
     }
     
     public ReportRecord(Integer reportId, String playerName,
             String reporterName, String reportReason, String reportTime,
-            Integer warningPoints)
+            Integer warningPoints, boolean active)
     {
         this.reportId = reportId;
         this.playerName = playerName;
@@ -74,29 +75,7 @@ public class ReportRecord {
             this.reportTime = timeStringToDate(reportTime);
         }
         this.warningPoints = warningPoints;
-        this.active = true;
-    }
-    
-    public ReportRecord(Integer reportId, Integer playerId, String playerName,
-            Integer playerPoints, Integer reporterId, String reporterName,
-            String reportType, String reportReason, String reportTime, 
-            Integer warningPoints)
-    {
-        this.reportId = reportId;
-        this.playerId = playerId;
-        this.playerName = playerName;
-        this.playerPoints = playerPoints;
-        this.reporterId = reporterId;
-        this.reporterName = reporterName;
-        this.reportType = ReportType.valueOf(reportType);
-        this.reason = reportReason;
-        if (reportTime == null) {
-            this.reportTime = new Date();
-        } else {
-            this.reportTime = timeStringToDate(reportTime);
-        }
-        this.warningPoints = warningPoints;
-        this.active = true;
+        this.active = active;
     }
 
     /**

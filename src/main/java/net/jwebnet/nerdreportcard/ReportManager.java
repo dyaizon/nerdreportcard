@@ -59,7 +59,7 @@ public class ReportManager {
         
         record = new ReportRecord(playerName, reporter, points, reason);
 
-        database.setReport(record);
+        database.addReport(record);
     }
     
     public void editReport(ReportRecord report, Integer points, String reason,
@@ -67,7 +67,7 @@ public class ReportManager {
     {
         ReportRecord newReport = new ReportRecord(report.reportId,
                 report.playerName, reporter, reason, report.getTimeString(),
-                points);
+                points, report.active);
         database.editReport(newReport);
     }
     
