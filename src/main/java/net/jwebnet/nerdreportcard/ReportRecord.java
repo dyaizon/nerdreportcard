@@ -143,7 +143,15 @@ public class ReportRecord {
         try {
             date = dateFormat.parse(timestring);
         } catch (ParseException e) {
-            date = new Date(0);
+            /*
+            Maybe the date is in the old format.
+            */
+            dateFormat.applyPattern("yyyy/MM/dd");
+            try {
+                date = dateFormat.parse(timestring);
+            } catch (ParseException f) {
+                date = new Date(0);
+            }
         }
         
         return date;
