@@ -20,6 +20,7 @@ import java.io.File;
 import java.util.List;
 import net.jwebnet.nerdreportcard.i18n.I18n;
 import static net.jwebnet.nerdreportcard.i18n.I18n.tl;
+import net.jwebnet.nerdreportcard.utils.ConfigManager;
 import net.jwebnet.nerdreportcard.utils.Database;
 import net.jwebnet.nerdreportcard.utils.YAMLDatabase;
 import org.bukkit.Bukkit;
@@ -30,12 +31,14 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 /**
  * Plugin class.
- * 
+ *
  * @author Joseph W Becher <jwbecher@jwebnet.net>
  */
 public final class NerdReportCard extends JavaPlugin implements Listener {
+
     protected transient I18n i18n;
     private Database database;
+    private ConfigManager config;
 
     /**
      * onEnable is a method from JavaPlugin
@@ -43,11 +46,17 @@ public final class NerdReportCard extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         this.saveDefaultConfig();
+        
         // Load config
-        
+        config = new ConfigManager(this);
+
         // Create a database manager.
-        database = new YAMLDatabase(this);
-        
+        if (config.useSql) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        } else {
+            database = new YAMLDatabase(this, config.yamlDbFile);
+        }
+
         getServer().getPluginManager().registerEvents(this, this);
         // This will throw a NullPointerException if you don't have the command defined in your plugin.yml file!
         /* Reload rhe data fale
@@ -88,7 +97,7 @@ public final class NerdReportCard extends JavaPlugin implements Listener {
     @Override
     public void onDisable() {
     }
-    
+
     public Database getReportDatabase() {
         return database;
     }
@@ -97,11 +106,11 @@ public final class NerdReportCard extends JavaPlugin implements Listener {
     public void normalJoin(PlayerJoinEvent event) {
         List<ReportRecord> recordList = database.getReports(event.getPlayer().getName());
         int totalPoints = 0;
-        
+
         for (ReportRecord record : recordList) {
             totalPoints += record.getPoints();
         }
-        
+
         if (totalPoints != 0) {
             Bukkit.broadcast(tl("playerLoginBannerAdmin", event.getPlayer().getName(), totalPoints), "nerdreportcard.admin");
         }

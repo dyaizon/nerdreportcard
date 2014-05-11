@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package net.jwebnet.nerdreportcard.utils;
 
 import java.io.File;
@@ -35,15 +34,16 @@ import org.bukkit.configuration.file.YamlConfiguration;
  * @author Matthew Green
  */
 public class YAMLDatabase implements Database {
+
     private final NerdReportCard plugin;
     private final File dataFile;
     private final FileConfiguration configFile;
-    private int nextReportId;
-    
-    public YAMLDatabase(NerdReportCard plugin) {       
+    private Integer nextReportId;
+
+    public YAMLDatabase(NerdReportCard plugin, String datafile) {
         String nextIdStr;
         this.plugin = plugin;
-        dataFile = new File(plugin.getDataFolder(), "reports.yml");
+        dataFile = new File(plugin.getDataFolder(), datafile);
         if (!dataFile.exists()) {
             try {
                 dataFile.createNewFile();
@@ -51,7 +51,7 @@ public class YAMLDatabase implements Database {
                 e.printStackTrace();
             }
         }
-        
+
         configFile = new YamlConfiguration();
         try {
             configFile.load(dataFile);
@@ -62,7 +62,7 @@ public class YAMLDatabase implements Database {
         } catch (InvalidConfigurationException e) {
             e.printStackTrace();
         }
-        
+
         nextIdStr = configFile.getString("nextReportId");
         if (nextIdStr == null) {
             configFile.set("nextReportId", 1);
@@ -72,9 +72,8 @@ public class YAMLDatabase implements Database {
             nextReportId = parseInt(nextIdStr);
         }
     }
-    
-    public ReportRecord getReport(Integer reportId)
-    {
+
+    public ReportRecord getReport(Integer reportId) {
         ReportRecord record = null;
         ConfigurationSection recordData = configFile.getConfigurationSection("reports." + reportId.toString());
 
@@ -87,14 +86,13 @@ public class YAMLDatabase implements Database {
                     recordData.getInt("warningPoints"),
                     recordData.getBoolean("active"));
         }
-        
+
         return record;
     }
-    
-    public List<ReportRecord> getReports(String username)
-    {
+
+    public List<ReportRecord> getReports(String username) {
         List<ReportRecord> reportList = new LinkedList<ReportRecord>();
-        
+
         ConfigurationSection recordData = configFile.getConfigurationSection("reports");
 
         for (String r : recordData.getKeys(false)) {
@@ -103,21 +101,14 @@ public class YAMLDatabase implements Database {
                 reportList.add(record);
             }
         }
-        
+
         return reportList;
     }
-   
-    public void addReport(ReportRecord record) throws IOException
-    {
-        // Get the id for this report
-        Integer thisReportId = parseInt(configFile.getString("nextReportId"));
-        
-        // Get the id for the next report
-        Integer nextReportId = thisReportId + 1;
 
+    public void addReport(ReportRecord record) throws IOException {
         // Create the new report secion
-        ConfigurationSection reportData = configFile.createSection("reports." + thisReportId);
-        
+        ConfigurationSection reportData = configFile.createSection("reports." + nextReportId.toString());
+
         // Save the report
         reportData.set("playerName", record.playerName);
         reportData.set("warningPoints", record.getPoints());
@@ -127,13 +118,13 @@ public class YAMLDatabase implements Database {
         reportData.set("active", record.active);
 
         // Update the next report id
+        nextReportId++;
         configFile.set("nextReportId", nextReportId.toString());
 
         configFile.save(dataFile);
     }
-    
-    public void editReport(ReportRecord record) throws IOException
-    {
+
+    public void editReport(ReportRecord record) throws IOException {
         // Create the new report secion
         ConfigurationSection reportData = configFile.getConfigurationSection("reports." + record.reportId.toString());
 
@@ -147,9 +138,8 @@ public class YAMLDatabase implements Database {
 
         configFile.save(dataFile);
     }
-    
-    public void deleteReport(Integer reportId) throws IOException
-    {
+
+    public void deleteReport(Integer reportId) throws IOException {
         ConfigurationSection reportData = configFile.getConfigurationSection("reports." + reportId.toString());
         reportData.set("active", false);
         configFile.save(dataFile);

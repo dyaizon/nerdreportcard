@@ -85,12 +85,11 @@ public class ReportCommands implements CommandExecutor {
 
         return true;
     }
-    
+
     private boolean checkPermArgs(CommandSender sender, String permission,
-            int min_args, int arg_len)
-    {
+            int min_args, int arg_len) {
         boolean success = true;
-        
+
         /*
          * Check permission
          */
@@ -100,7 +99,7 @@ public class ReportCommands implements CommandExecutor {
                 sender.sendMessage("You do not have permission to do this!");
             }
         }
-        
+
         /*
          * Check enough arguments were specified.
          */
@@ -110,38 +109,36 @@ public class ReportCommands implements CommandExecutor {
                 sender.sendMessage("Not enough arguments specified!");
             }
         }
-        
+
         return success;
     }
-    
-    private Integer argsToReportId(String[] args, CommandSender sender)
-    {
+
+    private Integer argsToReportId(String[] args, CommandSender sender) {
         Integer reportId = 0;
 
         // Check if valid id
         if (!args[0].startsWith("#")) {
             sender.sendMessage(tl("errReportIdInvalidPrefix"));
         }
-        
+
         try {
             reportId = parseInt(args[0].substring(1));
         } catch (NumberFormatException err) {
             sender.sendMessage(tl("errReportIdNotANumber"));
         }
-            
+
         return reportId;
     }
-    
+
     private ReportRecord argsToReport(String[] args, int offset,
-            String reporterName)
-    {
+            String reporterName) {
         ReportRecord report;
         int i = offset;
         String playerName;
         int warningPoints = 0;
         StringBuilder sb = new StringBuilder();
         String reason;
-        
+
         try {
             warningPoints = parseInt(args[i]);
         } catch (NumberFormatException exception) {
@@ -157,7 +154,6 @@ public class ReportCommands implements CommandExecutor {
         //    sender.sendMessage(tl("errPlayerNotSeenOnServer"));
         //    return true;
         //}
-
         // Get reason
         for (; i < args.length; i++) {
             sb.append(args[i]);
@@ -168,41 +164,39 @@ public class ReportCommands implements CommandExecutor {
 
         report = new ReportRecord(playerName, reporterName, warningPoints,
                 reason);
-        
+
         return report;
     }
 
-    private Boolean cmdAdd(CommandSender sender, Command cmd, String label, String[] args)
-    {
-        boolean success = true;   
+    private Boolean cmdAdd(CommandSender sender, Command cmd, String label, String[] args) {
+        boolean success = true;
         ReportRecord report;
-        
+
         success = checkPermArgs(sender, "nerdreportcard.edit", 2, args.length);
-        
-        if (success) {         
+
+        if (success) {
             report = argsToReport(args, 0, sender.getName());
             try {
                 database.addReport(report);
             } catch (IOException e) {
                 success = false;
             }
-            
+
             if (success) {
                 sender.sendMessage(tl("reportAddSuccess"));
             }
         }
-        
+
         return success;
     }
 
-    private Boolean cmdEdit(CommandSender sender, Command cmd, String label, String[] args)
-    {
+    private Boolean cmdEdit(CommandSender sender, Command cmd, String label, String[] args) {
         boolean success = true;
         ReportRecord report;
         ReportRecord parseReport;
-        
+
         success = checkPermArgs(sender, "nerdreportcard.edit", 2, args.length);
-        
+
         if (success) {
             Integer reportId = argsToReportId(args, sender);
 
@@ -212,7 +206,7 @@ public class ReportCommands implements CommandExecutor {
                 sender.sendMessage(tl("errReportIdNotFound"));
                 success = false;
             }
-            
+
             parseReport = argsToReport(args, 1, sender.getName());
             report.reason = parseReport.reason;
             report.setPoints(parseReport.getPoints());
@@ -222,28 +216,26 @@ public class ReportCommands implements CommandExecutor {
             } catch (IOException e) {
                 success = false;
             }
-            
+
             if (success) {
                 sender.sendMessage(tl("reportEditSuccess"));
             }
         }
-        
+
         return success;
     }
 
-    private Boolean cmdReload(CommandSender sender, Command cmd, String label, String[] args)
-    {
+    private Boolean cmdReload(CommandSender sender, Command cmd, String label, String[] args) {
         if (sender.hasPermission("nerdreportcard.admin")) {
             plugin.reloadConfig();
             plugin.i18n.updateLocale("en");
             sender.sendMessage(tl("reloadSuccess"));
         }
-        
+
         return true;
     }
 
-    private Boolean cmdList(CommandSender sender, Command cmd, String label, String[] args)
-    {
+    private Boolean cmdList(CommandSender sender, Command cmd, String label, String[] args) {
         String requestedPlayer;
 
         if (args.length > 0 && sender.hasPermission("nerdreportcard.list.others")) {
@@ -293,13 +285,12 @@ public class ReportCommands implements CommandExecutor {
         return true;
     }
 
-    private Boolean cmdId(CommandSender sender, Command cmd, String label, String[] args)
-    {
+    private Boolean cmdId(CommandSender sender, Command cmd, String label, String[] args) {
         if (sender.hasPermission("nerdreportcard.admin")) {
             if (args.length > 0) {
                 // Check if valid id
                 Integer reportId = argsToReportId(args, sender);
-                
+
                 ReportRecord record = database.getReport(reportId);
                 if (record == null) {
                     // No record found by that id
@@ -313,16 +304,15 @@ public class ReportCommands implements CommandExecutor {
         return true;
     }
 
-    private Boolean cmdRemove(CommandSender sender, Command cmd, String label, String[] args)
-    {
+    private Boolean cmdRemove(CommandSender sender, Command cmd, String label, String[] args) {
         boolean success = true;
         Integer reportId = 0;
-        
+
         success = checkPermArgs(sender, "nerdreportcard.admin", 1, args.length);
-        
+
         if (success) {
             reportId = argsToReportId(args, sender);
-            
+
             ReportRecord record = database.getReport(reportId);
             if (record == null) {
                 // No record found by that id
@@ -338,7 +328,7 @@ public class ReportCommands implements CommandExecutor {
                 }
             }
         }
-        
+
         return success;
     }
 }

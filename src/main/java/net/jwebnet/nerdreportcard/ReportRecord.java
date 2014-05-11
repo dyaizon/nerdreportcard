@@ -22,10 +22,11 @@ import java.util.Date;
 
 /**
  * Class representing a single report.
- * 
+ *
  * @author Matthew Green
  */
 public class ReportRecord {
+
     public Integer reportId;
     public String reason;
     private Integer warningPoints;
@@ -33,16 +34,13 @@ public class ReportRecord {
     public final String reporterName;
     public final boolean active;
     private final Date reportTime;
-    
-    private final ReportType reportType;
-    private final static Integer invalidReportId = 0;
-    private final static String dateFormatStr = "yy-MM-dd HH:mm";
 
-    ReportRecord(String playerName, String name, String reason, int warningPoints) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-    
+    private final ReportType reportType;
+    private final static Integer INVALID_REPORT_ID = 0;
+    private final static String DATE_FORMAT_STR = "yy-MM-dd HH:mm";
+
     private enum ReportType {
+
         LEGACY,
         Warning,
         Mute,
@@ -52,9 +50,8 @@ public class ReportRecord {
     }
 
     public ReportRecord(String playerName, String reporter, Integer points,
-            String reason)
-    {
-        this.reportId = invalidReportId;
+            String reason) {
+        this.reportId = INVALID_REPORT_ID;
         this.playerName = playerName;
         this.reporterName = reporter;
         this.warningPoints = points;
@@ -63,11 +60,10 @@ public class ReportRecord {
         reportType = ReportType.LEGACY;
         this.active = true;
     }
-    
+
     public ReportRecord(Integer reportId, String playerName,
             String reporterName, String reportReason, String reportTime,
-            Integer warningPoints, boolean active)
-    {
+            Integer warningPoints, boolean active) {
         this.reportId = reportId;
         this.playerName = playerName;
         this.reporterName = reporterName;
@@ -81,26 +77,23 @@ public class ReportRecord {
         this.warningPoints = warningPoints;
         this.active = active;
     }
-    
+
     /**
      * Set the warning points for the report.
-     * 
-     * @param points
-     * The points to set for the report.
+     *
+     * @param points The points to set for the report.
      */
-    public void setPoints(Integer points)
-    {
+    public void setPoints(Integer points) {
         warningPoints = points;
     }
 
     /**
-     * Retrieves the number of warning points for this report.
-     * 
+     * Retrieve the number of warning points for this report.
+     *
      * @return Integer
      * The warning points for the report.
      */
-    public Integer getPoints()
-    {
+    public Integer getPoints() {
         Integer points;
         /*
          * If the warning points are set to zero, use the config to calculate
@@ -113,33 +106,31 @@ public class ReportRecord {
         } else {
             points = warningPoints;
         }
-        
+
         return points;
     }
 
     /**
-     * Retrieves the time this report was entered, in UTC.
-     * 
-     * @return String
-     * String-formatted time of the report.
+     * Retrieve the time this report was entered, in UTC.
+     *
+     * @return String String-formatted time of the report.
      */
-    public String getTimeString()
-    {
-        SimpleDateFormat dateFormat = new SimpleDateFormat(dateFormatStr);
-        
+    public String getTimeString() {
+        SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT_STR);
+
         return dateFormat.format(reportTime);
     }
-    
-    private Date timeStringToDate (String timestring) {
+
+    private Date timeStringToDate(String timestring) {
         Date date;
-        SimpleDateFormat dateFormat = new SimpleDateFormat(dateFormatStr);
-        
+        SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT_STR);
+
         try {
             date = dateFormat.parse(timestring);
         } catch (ParseException e) {
             /*
-            Maybe the date is in the old format.
-            */
+             Maybe the date is in the old format.
+             */
             dateFormat.applyPattern("yyyy/MM/dd");
             try {
                 date = dateFormat.parse(timestring);
@@ -147,28 +138,25 @@ public class ReportRecord {
                 date = new Date(0);
             }
         }
-        
+
         return date;
     }
-    
+
     /**
-     * Retreives the time this report was entered, in seconds since the Epoch.
-     * 
-     * @return Long
-     * Seconds since the epoch.
+     * Retreive the time this report was entered, in seconds since the Epoch.
+     *
+     * @return Long Seconds since the epoch.
      */
-    public Long getTime()
-    {
+    public Long getTime() {
         return (reportTime.getTime() / 1000);
     }
-    
+
     /*
      * Calculate the number of warning points for this report.
      */
-    private Integer calculatePoints()
-    {
+    private Integer calculatePoints() {
         Integer points = 0;
-        
+
         return points;
     }
 }

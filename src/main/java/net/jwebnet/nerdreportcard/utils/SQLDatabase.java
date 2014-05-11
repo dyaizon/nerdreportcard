@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package net.jwebnet.nerdreportcard.utils;
 
 import java.io.IOException;
@@ -27,34 +26,28 @@ import net.jwebnet.nerdreportcard.ReportRecord;
  * @author Matthew Green
  */
 public class SQLDatabase implements Database {
-    
-    
-    public ReportRecord getReport(Integer reportId)
-    {
+
+    public ReportRecord getReport(Integer reportId) {
         ReportRecord record = null;
-        
+
         return record;
     }
-    
-    public List<ReportRecord> getReports(String username)
-    {
+
+    public List<ReportRecord> getReports(String username) {
         List<ReportRecord> reportList = new LinkedList<ReportRecord>();
-        
+
         return reportList;
     }
-   
-    public void addReport(ReportRecord record) throws IOException
-    {
-        
+
+    public void addReport(ReportRecord record) throws IOException {
+
     }
-    
-    public void editReport(ReportRecord record) throws IOException
-    {
-        
+
+    public void editReport(ReportRecord record) throws IOException {
+
     }
-    
-    public void deleteReport(Integer reportId) throws IOException
-    {
-        
+
+    public void deleteReport(Integer reportId) throws IOException {
+
     }
 }
