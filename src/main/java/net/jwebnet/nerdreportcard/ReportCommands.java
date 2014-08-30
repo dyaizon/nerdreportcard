@@ -19,11 +19,14 @@ package net.jwebnet.nerdreportcard;
 import static java.lang.Integer.parseInt;
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 import static net.jwebnet.nerdreportcard.i18n.I18n.tl;
-import net.jwebnet.nerdreportcard.utils.Database;
+import net.jwebnet.nerdreportcard.database.Database;
+import net.jwebnet.nerdreportcard.utils.UUIDFetcher;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 /**
  *
@@ -112,6 +115,28 @@ public class ReportCommands implements CommandExecutor {
 
         return success;
     }
+    
+    private UUID playerNameToUUID(String playerName) {
+        Player onlinePlayers[] = plugin.getServer().getOnlinePlayers();
+        UUID playerUUID = null;
+        
+        for (Player player : onlinePlayers) {
+            if (player.getName().toLowerCase().equals(
+                    playerName.toLowerCase())) {
+                playerUUID = player.getUniqueId();
+            }
+        }
+        
+        if (playerUUID == null) {
+            try {
+                playerUUID = UUIDFetcher.getUUIDOf(playerName);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        
+        return playerUUID;
+    }
 
     private Integer argsToReportId(String[] args, CommandSender sender) {
         Integer reportId = 0;
@@ -119,12 +144,12 @@ public class ReportCommands implements CommandExecutor {
         // Check if valid id
         if (!args[0].startsWith("#")) {
             sender.sendMessage(tl("errReportIdInvalidPrefix"));
-        }
-
-        try {
-            reportId = parseInt(args[0].substring(1));
-        } catch (NumberFormatException err) {
-            sender.sendMessage(tl("errReportIdNotANumber"));
+        } else {
+            try {
+                reportId = parseInt(args[0].substring(1));
+            } catch (NumberFormatException err) {
+                sender.sendMessage(tl("errReportIdNotANumber"));
+            }
         }
 
         return reportId;
@@ -134,7 +159,6 @@ public class ReportCommands implements CommandExecutor {
             String reporterName) {
         ReportRecord report;
         int i = offset;
-        String playerName;
         int warningPoints = 0;
         StringBuilder sb = new StringBuilder();
         String reason;
@@ -146,7 +170,9 @@ public class ReportCommands implements CommandExecutor {
         }
         i++;
 
-        playerName = args[i];
+        String playerName = args[i];
+        UUID playerUUID = playerNameToUUID(playerName);
+        UUID reporterUUID = playerNameToUUID(reporterName);
         i++;
 
         // Check if valid player
@@ -162,20 +188,49 @@ public class ReportCommands implements CommandExecutor {
         reason = sb.toString();
         reason = reason.trim();
 
-        report = new ReportRecord(playerName, reporterName, warningPoints,
-                reason);
+        report = new ReportRecord(playerName, playerUUID, reporterName,
+                reporterUUID, warningPoints, reason);
 
         return report;
     }
 
-    private Boolean cmdAdd(CommandSender sender, Command cmd, String label, String[] args) {
+    private Boolean cmdAdd(CommandSender sender, Command cmd, String label,
+            String[] args) {
         boolean success = true;
         ReportRecord report;
+        int i = 0;
+        String playerName;
+        UUID playerUUID;
+        int warningPoints = 0;
+        StringBuilder sb = new StringBuilder();
+        String reason;
 
         success = checkPermArgs(sender, "nerdreportcard.edit", 2, args.length);
-
+        
         if (success) {
-            report = argsToReport(args, 0, sender.getName());
+            try {
+                warningPoints = parseInt(args[0]);
+            } catch (NumberFormatException exception) {
+                i--;
+            }
+            i++;
+
+            playerName = args[i];
+            playerUUID = playerNameToUUID(playerName);
+            UUID reporterUUID = playerNameToUUID(sender.toString());
+            i++;
+
+            // Get reason
+            for (; i < args.length; i++) {
+                sb.append(args[i]);
+                sb.append(" ");
+            }
+            reason = sb.toString();
+            reason = reason.trim();
+
+            report = new ReportRecord(playerName, playerUUID, sender.getName(),
+                    reporterUUID, warningPoints, reason);
+
             try {
                 database.addReport(report);
             } catch (IOException e) {
@@ -190,15 +245,41 @@ public class ReportCommands implements CommandExecutor {
         return success;
     }
 
-    private Boolean cmdEdit(CommandSender sender, Command cmd, String label, String[] args) {
+    private Boolean cmdEdit(CommandSender sender, Command cmd, String label,
+            String[] args) {
         boolean success = true;
-        ReportRecord report;
-        ReportRecord parseReport;
+        Integer reportId = 0;
+        int i = 0;
+        int warningPoints = 0;
+        StringBuilder sb = new StringBuilder();
+        String reason = null;
+        ReportRecord report = null;
 
         success = checkPermArgs(sender, "nerdreportcard.edit", 2, args.length);
 
         if (success) {
-            Integer reportId = argsToReportId(args, sender);
+            reportId = argsToReportId(args, sender);
+            if (reportId == 0) {
+                success = false;
+            }
+        }
+        
+        if (success) {
+            i = 1;
+            try {
+                warningPoints = parseInt(args[i]);
+            } catch (NumberFormatException exception) {
+                i--;
+            }
+            i++;
+
+            // Get reason
+            for (; i < args.length; i++) {
+                sb.append(args[i]);
+                sb.append(" ");
+            }
+            reason = sb.toString();
+            reason = reason.trim();
 
             report = database.getReport(reportId);
             if (report == null) {
@@ -206,10 +287,11 @@ public class ReportCommands implements CommandExecutor {
                 sender.sendMessage(tl("errReportIdNotFound"));
                 success = false;
             }
-
-            parseReport = argsToReport(args, 1, sender.getName());
-            report.reason = parseReport.reason;
-            report.setPoints(parseReport.getPoints());
+        }
+        
+        if (success) {
+            report.reason = reason;
+            report.setPoints(warningPoints);
 
             try {
                 database.editReport(report);
@@ -225,7 +307,8 @@ public class ReportCommands implements CommandExecutor {
         return success;
     }
 
-    private Boolean cmdReload(CommandSender sender, Command cmd, String label, String[] args) {
+    private Boolean cmdReload(CommandSender sender, Command cmd, String label,
+            String[] args) {
         if (sender.hasPermission("nerdreportcard.admin")) {
             plugin.reloadConfig();
             plugin.i18n.updateLocale("en");
@@ -235,21 +318,30 @@ public class ReportCommands implements CommandExecutor {
         return true;
     }
 
-    private Boolean cmdList(CommandSender sender, Command cmd, String label, String[] args) {
-        String requestedPlayer;
+    private Boolean cmdList(CommandSender sender, Command cmd, String label,
+            String[] args) {
+        String playerName;
+        UUID playerUUID = null;
+        boolean success = true;
 
-        if (args.length > 0 && sender.hasPermission("nerdreportcard.list.others")) {
-            requestedPlayer = args[0];
+        if (args.length > 0 &&
+                sender.hasPermission("nerdreportcard.list.others")) {
+            playerName = args[0];
         } else {
             // Sender can only list themselves
-            requestedPlayer = sender.getName();
+            playerName = sender.getName();
+        }
+        
+        playerUUID = playerNameToUUID(playerName);
+        if (playerUUID == null) {
+            success = false;
         }
 
         // View a report card
-        if (sender.hasPermission("nerdreportcard.admin")) {
+        if (success && sender.hasPermission("nerdreportcard.admin")) {
             // Sender is allowed to see all data and search for others
 
-            List<ReportRecord> reports = database.getReports(requestedPlayer);
+            List<ReportRecord> reports = database.getReports(playerUUID);
 
             if (reports.isEmpty()) {
                 sender.sendMessage(tl("errNoReportsFound"));
@@ -257,16 +349,18 @@ public class ReportCommands implements CommandExecutor {
             }
             sender.sendMessage(tl("reportsFound", reports.size()));
 
-            sender.sendMessage(tl("reportFullTop", requestedPlayer));
+            sender.sendMessage(tl("reportFullTop", playerName));
             for (ReportRecord r : reports) {
                 if (r.active) {
-                    sender.sendMessage(tl("reportLineFull", r.reportId, r.getPoints(), r.reason, r.reporterName, r.getTimeString()));
+                    sender.sendMessage(tl("reportLineFull", r.reportId,
+                            r.getPoints(), r.reason, r.reporterName,
+                            r.getTimeString()));
                 }
             }
-            sender.sendMessage(tl("reportFullBottom", requestedPlayer));
-        } else if (sender.hasPermission("nerdreportcard.list")) {
+            sender.sendMessage(tl("reportFullBottom", playerName));
+        } else if (success && sender.hasPermission("nerdreportcard.list")) {
             // Sender is only allowed to see id and reason and their own
-            List<ReportRecord> reports = database.getReports(requestedPlayer);
+            List<ReportRecord> reports = database.getReports(playerUUID);
 
             if (reports.isEmpty()) {
                 sender.sendMessage(tl("errNoReportsFound"));
@@ -276,16 +370,20 @@ public class ReportCommands implements CommandExecutor {
 
             for (ReportRecord r : reports) {
                 if (r.active) {
-                    sender.sendMessage(tl("reportLineLite", r.reportId, r.reason));
+                    sender.sendMessage(tl("reportLineLite", r.reportId,
+                            r.reason));
 
                 }
             }
+        } else {
+            sender.sendMessage(tl("nameUUIDTranslate", playerName));
         }
 
-        return true;
+        return success;
     }
 
-    private Boolean cmdId(CommandSender sender, Command cmd, String label, String[] args) {
+    private Boolean cmdId(CommandSender sender, Command cmd, String label,
+            String[] args) {
         if (sender.hasPermission("nerdreportcard.admin")) {
             if (args.length > 0) {
                 // Check if valid id
@@ -298,13 +396,16 @@ public class ReportCommands implements CommandExecutor {
                     return false;
                 }
                 sender.sendMessage(tl("reportIdTop", sender.getName()));
-                sender.sendMessage(tl("reportLineFull", record.reportId, record.getPoints(), record.reason, record.reporterName, record.getTimeString()));
+                sender.sendMessage(tl("reportLineFull", record.reportId,
+                        record.getPoints(), record.reason, record.reporterName,
+                        record.getTimeString()));
             }
         }
         return true;
     }
 
-    private Boolean cmdRemove(CommandSender sender, Command cmd, String label, String[] args) {
+    private Boolean cmdRemove(CommandSender sender, Command cmd, String label,
+            String[] args) {
         boolean success = true;
         Integer reportId = 0;
 

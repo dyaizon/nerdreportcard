@@ -17,12 +17,17 @@
 package net.jwebnet.nerdreportcard;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.SimpleFormatter;
 import net.jwebnet.nerdreportcard.i18n.I18n;
 import static net.jwebnet.nerdreportcard.i18n.I18n.tl;
 import net.jwebnet.nerdreportcard.utils.ConfigManager;
-import net.jwebnet.nerdreportcard.utils.Database;
-import net.jwebnet.nerdreportcard.utils.YAMLDatabase;
+import net.jwebnet.nerdreportcard.database.Database;
+import net.jwebnet.nerdreportcard.database.SQLDatabase;
+import net.jwebnet.nerdreportcard.database.YAMLDatabase;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -38,6 +43,7 @@ public final class NerdReportCard extends JavaPlugin implements Listener {
 
     protected transient I18n i18n;
     private Database database;
+    private YAMLDatabase yamlDb;
     private ConfigManager config;
 
     /**
@@ -45,50 +51,92 @@ public final class NerdReportCard extends JavaPlugin implements Listener {
      */
     @Override
     public void onEnable() {
+        boolean success = true;
         this.saveDefaultConfig();
         
         // Load config
         config = new ConfigManager(this);
+        
+        // Turn on debugging if necessary.
+        if (config.debug) {
+            enableDebug();
+        }
 
         // Create a database manager.
         if (config.useSql) {
-            throw new UnsupportedOperationException("Not supported yet.");
+            yamlDb = new YAMLDatabase(this);
+            database = new SQLDatabase(this);
+            
+            success = database.initialise();
+            
+            if (success) {
+                success = yamlDb.initialise();
+            
+                if (success) {
+                    getLogger().info("Transferring YAML data to MySQL");
+                    List<ReportRecord> records = yamlDb.getReports();
+                    for (ReportRecord r : records) {
+                        try {
+                            database.addReport(r);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    // Move the reports file so it's not imported again.
+                    getLogger().info("Moving YAML file to " +
+                            config.yamlDbFile + ".bak");
+                    yamlDb.move();
+                }
+             
+                // Success should be true whether or not the YAML database
+                // initialised as it's not required past this point.
+                success = true;
+            }
         } else {
-            database = new YAMLDatabase(this, config.yamlDbFile);
+            database = new YAMLDatabase(this);
+            success = database.initialise();
         }
 
-        getServer().getPluginManager().registerEvents(this, this);
-        // This will throw a NullPointerException if you don't have the command defined in your plugin.yml file!
-        /* Reload rhe data fale
-         * usage: /rcreload
-         */
-        getCommand("rcreload").setExecutor(new ReportCommands(this));
-        /* Add a new report
-         * usage: /rcadd <player_name> <points> <reason>
-         */
-        getCommand("rcadd").setExecutor(new ReportCommands(this));
-        /* Edit an existing report by id
-         * usage: /rcedit <report_id> <note>
-         */
-        getCommand("rcedit").setExecutor(new ReportCommands(this));
-        /* Remove a report by id
-         * usage: /rcremove <report_id> <report_id>
-         */
-        getCommand("rcremove").setExecutor(new ReportCommands(this));
-        /* List a report
-         * usage: /rclist {player}
-         */
-        getCommand("rclist").setExecutor(new ReportCommands(this));
-        /* List a report by id
-         * usage: /rcid <reportcard_id>
-         */
-        getCommand("rcid").setExecutor(new ReportCommands(this));
+        if (success) {
+            getServer().getPluginManager().registerEvents(this, this);
+            ReportCommands commands = new ReportCommands(this);
 
-        // Load the messages file
-        saveDefaultResource("messages_en.properties");
-        i18n = new I18n(this);
-        i18n.onEnable();
-        i18n.updateLocale("en");
+            /* Reload rhe data fale
+             * usage: /rcreload
+             */
+            getCommand("rcreload").setExecutor(commands);
+            /* Add a new report
+             * usage: /rcadd <player_name> <points> <reason>
+             */
+            getCommand("rcadd").setExecutor(commands);
+            /* Edit an existing report by id
+             * usage: /rcedit <report_id> <note>
+             */
+            getCommand("rcedit").setExecutor(commands);
+            /* Remove a report by id
+             * usage: /rcremove <report_id> <report_id>
+             */
+            getCommand("rcremove").setExecutor(commands);
+            /* List a report
+             * usage: /rclist {player}
+             */
+            getCommand("rclist").setExecutor(commands);
+            /* List a report by id
+             * usage: /rcid <reportcard_id>
+             */
+            getCommand("rcid").setExecutor(commands);
+
+            // Load the messages file
+            saveDefaultResource("messages_en.properties");
+            i18n = new I18n(this);
+            i18n.onEnable();
+            i18n.updateLocale("en");
+        }
+        
+        if (!success) {
+            getLogger().warning("Failed to initialise NerdReportCard");
+        }
     }
 
     /**
@@ -97,19 +145,37 @@ public final class NerdReportCard extends JavaPlugin implements Listener {
     @Override
     public void onDisable() {
     }
+    
+    /*
+     * Enable debugging.
+     */
+    private void enableDebug() {
+        File folder = getDataFolder();
+        if (!folder.exists()) {
+            folder.mkdir();
+        }
+        
+        File debug = new File(folder, "debug.log");
+        
+        try {
+            FileHandler fh = new FileHandler(debug.getPath());
+            fh.setLevel(Level.FINER);
+            getLogger().addHandler(fh);
+            
+            SimpleFormatter ft = new SimpleFormatter();
+            fh.setFormatter(ft);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     public Database getReportDatabase() {
-        return database;
+        return this.database;
     }
 
     @EventHandler
     public void normalJoin(PlayerJoinEvent event) {
-        List<ReportRecord> recordList = database.getReports(event.getPlayer().getName());
-        int totalPoints = 0;
-
-        for (ReportRecord record : recordList) {
-            totalPoints += record.getPoints();
-        }
+        int totalPoints = this.database.getPoints(event.getPlayer().getUniqueId());
 
         if (totalPoints != 0) {
             Bukkit.broadcast(tl("playerLoginBannerAdmin", event.getPlayer().getName(), totalPoints), "nerdreportcard.admin");
@@ -122,5 +188,9 @@ public final class NerdReportCard extends JavaPlugin implements Listener {
         if (!customConfigFile.exists()) {
             saveResource(fileName, false);
         }
+    }
+    
+    public ConfigManager getConfigM() {
+        return this.config;
     }
 }
