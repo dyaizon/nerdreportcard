@@ -19,6 +19,7 @@ package net.jwebnet.nerdreportcard;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.UUID;
 
 /**
  * Class representing a single report.
@@ -27,9 +28,11 @@ import java.util.Date;
  */
 public class ReportRecord {
 
-    public Integer reportId;
-    public String reason;
-    private Integer warningPoints;
+    public Integer reportId = INVALID_REPORT_ID;
+    public String reason = null;
+    private Integer warningPoints = 0;
+    private UUID playerUUID = null;
+    private UUID reporterUUID = null;
     public final String playerName;
     public final String reporterName;
     public final boolean active;
@@ -37,7 +40,7 @@ public class ReportRecord {
 
     private final ReportType reportType;
     private final static Integer INVALID_REPORT_ID = 0;
-    private final static String DATE_FORMAT_STR = "yy-MM-dd HH:mm";
+    private final static String DATE_FORMAT_STR = "yy-MM-dd HH:mm zzz";
 
     private enum ReportType {
 
@@ -49,33 +52,116 @@ public class ReportRecord {
         PermaBan,
     }
 
-    public ReportRecord(String playerName, String reporter, Integer points,
-            String reason) {
+    public ReportRecord(String playerName, UUID playerUUID, String reporterName,
+            UUID reporterUUID, Integer warningPoints, String reportReason) {
         this.reportId = INVALID_REPORT_ID;
         this.playerName = playerName;
-        this.reporterName = reporter;
-        this.warningPoints = points;
-        this.reason = reason;
-        this.reportTime = new Date();
-        reportType = ReportType.LEGACY;
-        this.active = true;
-    }
-
-    public ReportRecord(Integer reportId, String playerName,
-            String reporterName, String reportReason, String reportTime,
-            Integer warningPoints, boolean active) {
-        this.reportId = reportId;
-        this.playerName = playerName;
+        this.playerUUID = playerUUID;
         this.reporterName = reporterName;
+        this.playerUUID = reporterUUID;
         this.reportType = ReportType.LEGACY;
         this.reason = reportReason;
-        if (reportTime == null) {
-            this.reportTime = new Date();
-        } else {
-            this.reportTime = timeStringToDate(reportTime);
-        }
+        this.reportTime = new Date();
+        this.warningPoints = warningPoints;
+        this.active = true;
+    }
+    
+    public ReportRecord(Integer reportId, String playerName, UUID playerUUID,
+            String reporterName, UUID reporterUUID, String reportReason,
+            String reportTime, Integer warningPoints, boolean active) {
+        this.reportId = reportId;
+        this.playerName = playerName;
+        this.playerUUID = playerUUID;
+        this.reporterName = reporterName;
+        this.reporterUUID = reporterUUID;
+        this.reportType = ReportType.LEGACY;
+        this.reason = reportReason;
+        this.reportTime = timeStringToDate(reportTime);
         this.warningPoints = warningPoints;
         this.active = active;
+    }
+    
+    public ReportRecord(Integer reportId, String playerName, UUID playerUUID,
+            String reporterName, UUID reporterUUID, String reportReason,
+            Integer reportTime, Integer warningPoints, boolean active) {
+        this.reportId = reportId;
+        this.playerName = playerName;
+        this.playerUUID = playerUUID;
+        this.reporterName = reporterName;
+        this.reporterUUID = reporterUUID;
+        this.reportType = ReportType.LEGACY;
+        this.reason = reportReason;
+        this.reportTime = new Date((long) reportTime * 1000);
+        this.warningPoints = warningPoints;
+        this.active = active;
+    }
+    
+    /**
+     * Set the player UUID.
+     * 
+     * @param uuid
+     * The uuid to set for the player.
+     */
+    public void setPlayerUUID (UUID uuid) {
+        this.playerUUID = uuid;
+    }
+    
+    /**
+     * Retreive the player UUID.
+     * 
+     * @return UUID
+     * The player UUID.
+     */
+    public UUID getPlayerUUID() {
+        return this.playerUUID;
+    }
+    
+    /**
+     * Retrieve the string representation of the player UUID.
+     * 
+     * @return String
+     * String representation of the player UUID.
+     */
+    public String getPlayerUUIDStr() {
+        String uuidStr = null;
+        if (this.playerUUID != null) {
+            uuidStr = this.playerUUID.toString();
+        }
+        return uuidStr;
+    }
+    
+    /**
+     * Set the reporter UUID.
+     * 
+     * @param uuid
+     * The uuid to set for the player.
+     */
+    public void setReporterUUID (UUID uuid) {
+        this.reporterUUID = uuid;
+    }
+    
+    /**
+     * Retrieve the reporter UUID.
+     * 
+     * @return UUID
+     * The reporter UUID
+     */
+    public UUID getReporterUUID() {
+        return this.reporterUUID;
+    }
+    
+    /**
+     * Retrieve the string representation of the reporter UUID.
+     * 
+     * @return String
+     * String representation of the reporter UUID.
+     */
+    public String getReporterUUIDStr() {
+        String uuidStr = null;
+        if (this.reporterUUID != null) {
+            uuidStr = this.reporterUUID.toString();
+        }
+        return uuidStr;
     }
 
     /**
@@ -131,11 +217,19 @@ public class ReportRecord {
             /*
              Maybe the date is in the old format.
              */
-            dateFormat.applyPattern("yyyy/MM/dd");
+            dateFormat.applyPattern("MMM d, yyyy h:mm:ss a zzz");
             try {
                 date = dateFormat.parse(timestring);
             } catch (ParseException f) {
-                date = new Date(0);
+                /*
+                 Or the format that didn't last long.
+                 */
+                dateFormat.applyPattern("yy-MM-dd HH:mm");
+                try {
+                    date = dateFormat.parse(timestring);
+                } catch (ParseException g) {
+                    date = new Date(0);
+                }
             }
         }
 
@@ -145,10 +239,10 @@ public class ReportRecord {
     /**
      * Retreive the time this report was entered, in seconds since the Epoch.
      *
-     * @return Long Seconds since the epoch.
+     * @return int Seconds since the epoch.
      */
-    public Long getTime() {
-        return (reportTime.getTime() / 1000);
+    public int getTime() {
+        return ((int) (reportTime.getTime() / 1000));
     }
 
     /*

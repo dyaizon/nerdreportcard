@@ -26,11 +26,12 @@ import org.bukkit.configuration.file.FileConfiguration;
  */
 public class ConfigManager {
 
+    public boolean debug = false;
     public boolean useSql = false;
     public String sqlAddress;
-    public String sqlPort;
-    public String sqlUsername;
-    public String sqlPassword;
+    public int sqlPort;
+    public String sqlUsername = null;
+    public String sqlPassword = null;
     public String sqlDb;
     public String sqlPrefix;
     public String yamlDbFile;
@@ -38,14 +39,24 @@ public class ConfigManager {
     public ConfigManager(NerdReportCard plugin) {
         FileConfiguration config = plugin.getConfig();
 
-        useSql = config.getBoolean("database.sql.use", false);
-        sqlAddress = config.getString("database.sql.address", "localhost");
-        sqlPort = config.getString("database.sql.port", "3306");
-        sqlUsername = config.getString("database.sql.username", "user");
-        sqlPassword = config.getString("database.sql.password", "pass");
-        sqlDb = config.getString("database.sql.dbname", "nerdrc");
-        sqlPrefix = config.getString("database.sql.prefix", "nrc_");
+        this.debug = config.getBoolean("debug", false);
+        this.useSql = config.getBoolean("database.sql.use", false);
+        if (this.useSql) {
+            this.sqlAddress = config.getString("database.sql.address",
+                    "localhost");
+            this.sqlPort = config.getInt("database.sql.port", 3306);
+            this.sqlUsername = config.getString("database.sql.username");
+            this.sqlPassword = config.getString("database.sql.password");
+            this.sqlDb = config.getString("database.sql.dbname", "nerdrc");
+            this.sqlPrefix = config.getString("database.sql.prefix", "nrc_");
+            
+            if (this.sqlUsername == null || this.sqlPassword == null) {
+                plugin.getLogger().warning("Missing mandatory SQL " +
+                        "configuration - must have both username and " +
+                        "password if SQL is enabled.");
+            }
+        }
 
-        yamlDbFile = config.getString("database.yamlfile", "reports.yml");
+        this.yamlDbFile = config.getString("database.yamlfile", "reports.yml");
     }
 }
