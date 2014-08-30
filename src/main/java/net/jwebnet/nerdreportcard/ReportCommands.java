@@ -16,11 +16,6 @@
  */
 package net.jwebnet.nerdreportcard;
 
-import static java.lang.Integer.parseInt;
-import java.io.IOException;
-import java.util.List;
-import java.util.UUID;
-import static net.jwebnet.nerdreportcard.i18n.I18n.tl;
 import net.jwebnet.nerdreportcard.database.Database;
 import net.jwebnet.nerdreportcard.utils.UUIDFetcher;
 import org.bukkit.command.Command;
@@ -28,8 +23,14 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.UUID;
+
+import static java.lang.Integer.parseInt;
+import static net.jwebnet.nerdreportcard.i18n.I18n.tl;
+
 /**
- *
  * @author Matthew Green
  */
 public class ReportCommands implements CommandExecutor {
@@ -43,16 +44,14 @@ public class ReportCommands implements CommandExecutor {
     }
 
     /**
-     *
-     * @param sender
-     * @param cmd
-     * @param label
-     * @param args
-     * @return
+     * @param sender The player typing the command
+     * @param cmd    The command types
+     * @param label  Unknown
+     * @param args   everything else :)
+     * @return ReportCard
      */
-    @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label,
-            String[] args) {
+                             String[] args) {
 
         // Add a report card
         if (cmd.getName().equalsIgnoreCase("rcadd")) {
@@ -90,17 +89,15 @@ public class ReportCommands implements CommandExecutor {
     }
 
     private boolean checkPermArgs(CommandSender sender, String permission,
-            int min_args, int arg_len) {
+                                  int min_args, int arg_len) {
         boolean success = true;
 
         /*
          * Check permission
          */
-        if (success) {
-            if (!sender.hasPermission(permission)) {
-                success = false;
-                sender.sendMessage("You do not have permission to do this!");
-            }
+        if (!sender.hasPermission(permission)) {
+            success = false;
+            sender.sendMessage("You do not have permission to do this!");
         }
 
         /*
@@ -115,18 +112,18 @@ public class ReportCommands implements CommandExecutor {
 
         return success;
     }
-    
+
     private UUID playerNameToUUID(String playerName) {
         Player onlinePlayers[] = plugin.getServer().getOnlinePlayers();
         UUID playerUUID = null;
-        
+
         for (Player player : onlinePlayers) {
             if (player.getName().toLowerCase().equals(
                     playerName.toLowerCase())) {
                 playerUUID = player.getUniqueId();
             }
         }
-        
+
         if (playerUUID == null) {
             try {
                 playerUUID = UUIDFetcher.getUUIDOf(playerName);
@@ -134,7 +131,7 @@ public class ReportCommands implements CommandExecutor {
                 e.printStackTrace();
             }
         }
-        
+
         return playerUUID;
     }
 
@@ -156,7 +153,7 @@ public class ReportCommands implements CommandExecutor {
     }
 
     private ReportRecord argsToReport(String[] args, int offset,
-            String reporterName) {
+                                      String reporterName) {
         ReportRecord report;
         int i = offset;
         int warningPoints = 0;
@@ -195,8 +192,8 @@ public class ReportCommands implements CommandExecutor {
     }
 
     private Boolean cmdAdd(CommandSender sender, Command cmd, String label,
-            String[] args) {
-        boolean success = true;
+                           String[] args) {
+        boolean success;
         ReportRecord report;
         int i = 0;
         String playerName;
@@ -206,7 +203,7 @@ public class ReportCommands implements CommandExecutor {
         String reason;
 
         success = checkPermArgs(sender, "nerdreportcard.edit", 2, args.length);
-        
+
         if (success) {
             try {
                 warningPoints = parseInt(args[0]);
@@ -246,10 +243,10 @@ public class ReportCommands implements CommandExecutor {
     }
 
     private Boolean cmdEdit(CommandSender sender, Command cmd, String label,
-            String[] args) {
-        boolean success = true;
+                            String[] args) {
+        boolean success;
         Integer reportId = 0;
-        int i = 0;
+        int i;
         int warningPoints = 0;
         StringBuilder sb = new StringBuilder();
         String reason = null;
@@ -263,7 +260,7 @@ public class ReportCommands implements CommandExecutor {
                 success = false;
             }
         }
-        
+
         if (success) {
             i = 1;
             try {
@@ -288,7 +285,7 @@ public class ReportCommands implements CommandExecutor {
                 success = false;
             }
         }
-        
+
         if (success) {
             report.reason = reason;
             report.setPoints(warningPoints);
@@ -308,7 +305,7 @@ public class ReportCommands implements CommandExecutor {
     }
 
     private Boolean cmdReload(CommandSender sender, Command cmd, String label,
-            String[] args) {
+                              String[] args) {
         if (sender.hasPermission("nerdreportcard.admin")) {
             plugin.reloadConfig();
             plugin.i18n.updateLocale("en");
@@ -319,9 +316,9 @@ public class ReportCommands implements CommandExecutor {
     }
 
     private Boolean cmdList(CommandSender sender, Command cmd, String label,
-            String[] args) {
+                            String[] args) {
         String playerName;
-        UUID playerUUID = null;
+        UUID playerUUID;
         boolean success = true;
 
         if (args.length > 0 &&
@@ -331,7 +328,7 @@ public class ReportCommands implements CommandExecutor {
             // Sender can only list themselves
             playerName = sender.getName();
         }
-        
+
         playerUUID = playerNameToUUID(playerName);
         if (playerUUID == null) {
             success = false;
@@ -383,7 +380,7 @@ public class ReportCommands implements CommandExecutor {
     }
 
     private Boolean cmdId(CommandSender sender, Command cmd, String label,
-            String[] args) {
+                          String[] args) {
         if (sender.hasPermission("nerdreportcard.admin")) {
             if (args.length > 0) {
                 // Check if valid id
@@ -405,9 +402,9 @@ public class ReportCommands implements CommandExecutor {
     }
 
     private Boolean cmdRemove(CommandSender sender, Command cmd, String label,
-            String[] args) {
-        boolean success = true;
-        Integer reportId = 0;
+                              String[] args) {
+        boolean success;
+        Integer reportId;
 
         success = checkPermArgs(sender, "nerdreportcard.admin", 1, args.length);
 
