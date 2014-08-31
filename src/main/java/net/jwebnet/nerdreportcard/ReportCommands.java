@@ -85,7 +85,7 @@ public class ReportCommands implements CommandExecutor {
             return cmdRemove(sender, cmd, label, args);
         }
 
-        return true;
+        return false;
     }
 
     private boolean checkPermArgs(CommandSender sender, String permission,
@@ -152,55 +152,22 @@ public class ReportCommands implements CommandExecutor {
         return reportId;
     }
 
-    private ReportRecord argsToReport(String[] args, int offset,
-                                      String reporterName) {
-        ReportRecord report;
-        int i = offset;
-        int warningPoints = 0;
-        StringBuilder sb = new StringBuilder();
-        String reason;
-
-        try {
-            warningPoints = parseInt(args[i]);
-        } catch (NumberFormatException exception) {
-            i--;
-        }
-        i++;
-
-        String playerName = args[i];
-        UUID playerUUID = playerNameToUUID(playerName);
-        UUID reporterUUID = playerNameToUUID(reporterName);
-        i++;
-
-        // Check if valid player
-        //if (Bukkit.getOfflinePlayer(playerName).hasPlayedBefore() == false) {
-        //    sender.sendMessage(tl("errPlayerNotSeenOnServer"));
-        //    return true;
-        //}
-        // Get reason
-        for (; i < args.length; i++) {
-            sb.append(args[i]);
-            sb.append(" ");
-        }
-        reason = sb.toString();
-        reason = reason.trim();
-
-        report = new ReportRecord(playerName, playerUUID, reporterName,
-                reporterUUID, warningPoints, reason);
-
-        return report;
-    }
-
     private Boolean cmdAdd(CommandSender sender, Command cmd, String label,
                            String[] args) {
         boolean success;
         ReportRecord report;
         int i = 0;
-        String playerName;
-        UUID playerUUID;
+        String playerName = null;
+        UUID playerUUID = null;
+        UUID reporter UUID = null;
         int warningPoints = 0;
         StringBuilder sb = new StringBuilder();
         String reason;
+
+        if (!(sender instanceof Player)) {
+            sender.sendMessage("This command can only be run by a player.");
+            return true;
+        }
 
         success = checkPermArgs(sender, "nerdreportcard.edit", 2, args.length);
 
@@ -214,8 +181,13 @@ public class ReportCommands implements CommandExecutor {
 
             playerName = args[i];
             playerUUID = playerNameToUUID(playerName);
-            UUID reporterUUID = playerNameToUUID(sender.toString());
+            reporterUUID = playerNameToUUID(sender.toString());
             i++;
+
+            if (playerUUID == null ) {
+                sender.sendMessage(tl("nameUUIDTranslate", playerName));
+                return true;
+            }
 
             // Get reason
             for (; i < args.length; i++) {
