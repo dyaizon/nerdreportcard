@@ -159,7 +159,7 @@ public class ReportCommands implements CommandExecutor {
         int i = 0;
         String playerName = null;
         UUID playerUUID = null;
-        UUID reporter UUID = null;
+        UUID reporterUUID = null;
         int warningPoints = 0;
         StringBuilder sb = new StringBuilder();
         String reason;
