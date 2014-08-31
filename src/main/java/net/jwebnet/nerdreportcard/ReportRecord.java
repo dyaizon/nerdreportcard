@@ -58,7 +58,7 @@ public class ReportRecord {
         this.playerName = playerName;
         this.playerUUID = playerUUID;
         this.reporterName = reporterName;
-        this.playerUUID = reporterUUID;
+        this.reporterUUID = reporterUUID;
         this.reportType = ReportType.LEGACY;
         this.reason = reportReason;
         this.reportTime = new Date();

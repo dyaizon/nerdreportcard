@@ -181,7 +181,7 @@ public class ReportCommands implements CommandExecutor {
 
             playerName = args[i];
             playerUUID = playerNameToUUID(playerName);
-            reporterUUID = playerNameToUUID(sender.toString());
+            reporterUUID = ((Player) sender).getUniqueId();
             i++;
 
             if (playerUUID == null ) {

@@ -178,7 +178,7 @@ public class SQLDatabase implements Database {
     public int getPoints(UUID uuid) {
         int points = 0;
         ResultSet reportResult = this.conn.rQuery(
-                "SELECT points FROM `" + this.prefix + "users`" +
+                "SELECT points FROM `" + this.prefix + "users` " +
                 "WHERE uuid = '" + uuid.toString() + "'");
         
         try {
