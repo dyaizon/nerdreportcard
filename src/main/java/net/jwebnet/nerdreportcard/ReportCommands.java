@@ -24,6 +24,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -114,13 +115,13 @@ public class ReportCommands implements CommandExecutor {
     }
 
     private UUID playerNameToUUID(String playerName) {
-        Player onlinePlayers[] = plugin.getServer().getOnlinePlayers();
         UUID playerUUID = null;
 
-        for (Player player : onlinePlayers) {
+        for (Player player : plugin.getServer().getOnlinePlayers()) {
             if (player.getName().toLowerCase().equals(
                     playerName.toLowerCase())) {
                 playerUUID = player.getUniqueId();
+                break;
             }
         }
 
