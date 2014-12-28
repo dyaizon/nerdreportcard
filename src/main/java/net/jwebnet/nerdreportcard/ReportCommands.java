@@ -16,6 +16,7 @@
  */
 package net.jwebnet.nerdreportcard;
 
+import com.sun.istack.internal.Nullable;
 import net.jwebnet.nerdreportcard.database.Database;
 import net.jwebnet.nerdreportcard.utils.UUIDFetcher;
 import org.bukkit.command.Command;
@@ -114,6 +115,7 @@ public class ReportCommands implements CommandExecutor {
         return success;
     }
 
+    @Nullable
     private UUID playerNameToUUID(String playerName) {
         UUID playerUUID = null;
 
@@ -136,15 +138,16 @@ public class ReportCommands implements CommandExecutor {
         return playerUUID;
     }
 
-    private Integer argsToReportId(String[] args, CommandSender sender) {
-        Integer reportId = 0;
+    @Nullable
+    private Integer strToReportId(String id, CommandSender sender) {
+        Integer reportId = null;
 
         // Check if valid id
-        if (!args[0].startsWith("#")) {
+        if (!id.startsWith("#")) {
             sender.sendMessage(tl("errReportIdInvalidPrefix"));
         } else {
             try {
-                reportId = parseInt(args[0].substring(1));
+                reportId = parseInt(id.substring(1));
             } catch (NumberFormatException err) {
                 sender.sendMessage(tl("errReportIdNotANumber"));
             }
@@ -228,8 +231,8 @@ public class ReportCommands implements CommandExecutor {
         success = checkPermArgs(sender, "nerdreportcard.edit", 2, args.length);
 
         if (success) {
-            reportId = argsToReportId(args, sender);
-            if (reportId == 0) {
+            reportId = strToReportId(args[0], sender);
+            if (reportId == null) {
                 success = false;
             }
         }
@@ -357,7 +360,7 @@ public class ReportCommands implements CommandExecutor {
         if (sender.hasPermission("nerdreportcard.admin")) {
             if (args.length > 0) {
                 // Check if valid id
-                Integer reportId = argsToReportId(args, sender);
+                Integer reportId = strToReportId(args[0], sender);
 
                 ReportRecord record = database.getReport(reportId);
                 if (record == null) {
@@ -365,7 +368,7 @@ public class ReportCommands implements CommandExecutor {
                     sender.sendMessage(tl("errReportIdNotFound"));
                     return false;
                 }
-                sender.sendMessage(tl("reportIdTop", sender.getName()));
+                sender.sendMessage(tl("reportIdTop", record.playerName));
                 sender.sendMessage(tl("reportLineFull", record.reportId,
                         record.getPoints(), record.reason, record.reporterName,
                         record.getTimeString()));
@@ -382,7 +385,7 @@ public class ReportCommands implements CommandExecutor {
         success = checkPermArgs(sender, "nerdreportcard.admin", 1, args.length);
 
         if (success) {
-            reportId = argsToReportId(args, sender);
+            reportId = strToReportId(args[0], sender);
 
             ReportRecord record = database.getReport(reportId);
             if (record == null) {
